@@ -7149,7 +7149,7 @@ __metadata:
     jest: ^29.6.3
     prettier: 2.8.8
     react: 18.3.1
-    react-native: 0.75.2
+    react-native: ^0.75.2
     react-test-renderer: 18.3.1
     typescript: 5.0.4
   languageName: unknown
@@ -7864,7 +7864,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native@npm:0.75.2":
+"react-native@npm:^0.75.2":
   version: 0.75.2
   resolution: "react-native@npm:0.75.2"
   dependencies:
