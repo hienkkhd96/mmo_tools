@@ -26,6 +26,7 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import Overlay from './src/modules/Overlay';
+import { openOtherApp } from './src/utils/openAnotherApp';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -59,9 +60,8 @@ function Section({ children, title }: SectionProps): React.JSX.Element {
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const handlePress = () => {
-    Overlay.startOverlay(() => {
-      console.log('Overlay started');
-    });
+    Overlay.startOverlay();
+    openOtherApp('tiktok://');
     return;
   };
   const backgroundStyle = {

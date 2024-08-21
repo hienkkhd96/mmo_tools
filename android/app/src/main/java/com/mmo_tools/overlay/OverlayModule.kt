@@ -11,11 +11,13 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.Callback
-import android.view.MotionEvent
+import com.facebook.react.bridge.WritableMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.facebook.react.bridge.ReactContext
 
 class OverlayModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
@@ -24,11 +26,7 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
         reactContext.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
 
-    private var onStartCallback: Callback? = null
-    private var onStopCallback: Callback? = null
-
     init {
-        // Request permissions if necessary
         requestOverlayPermission()
     }
 
@@ -37,14 +35,12 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
     }
 
     @ReactMethod
-    fun startOverlay(onStart: Callback) {
+    fun startOverlay() {
         val context = reactContext.applicationContext
 
         if (overlayLayout != null) {
-            stopOverlay() // Ensure any existing overlay is removed
+            return
         }
-
-        onStartCallback = onStart
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -54,16 +50,16 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
             android.graphics.PixelFormat.TRANSLUCENT
         )
         params.gravity = Gravity.TOP or Gravity.START
+
         overlayLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.TOP
-            setPadding(16, 16, 16, 16) // Padding to avoid edge touching
+            setPadding(16, 16, 16, 16)
         }
 
         val buttonLayout = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.TOP
-            
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -73,14 +69,14 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
         val startButton = Button(context).apply {
             this.text = "Start"
             this.setOnClickListener {
-                // Invoke the JavaScript callback when the "Start" button is clicked
-                onStartCallback?.invoke()
+                sendEvent("onStartEvent", null)
             }
         }
 
         val stopButton = Button(context).apply {
             this.text = "Stop"
             this.setOnClickListener {
+                sendEvent("onStopEvent", null)
                 stopOverlay()
             }
         }
@@ -89,16 +85,8 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
         buttonLayout.addView(stopButton)
 
         overlayLayout?.addView(buttonLayout)
+
         windowManager.addView(overlayLayout, params)
-        overlayLayout?.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                if (event.rawY <= buttonLayout.bottom) {
-                    return@setOnTouchListener false
-                }
-                return@setOnTouchListener true
-            }
-            false
-        }
     }
 
     @ReactMethod
@@ -107,6 +95,10 @@ class OverlayModule(private val reactContext: ReactApplicationContext) : ReactCo
             windowManager.removeView(it)
             overlayLayout = null
         }
+    }
+
+    private fun sendEvent(eventName: String, params: WritableMap?) {
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(eventName, params)
     }
 
     private fun requestOverlayPermission() {
