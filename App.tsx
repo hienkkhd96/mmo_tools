@@ -27,6 +27,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import Overlay from './src/modules/Overlay';
 import { openOtherApp } from './src/utils/openAnotherApp';
+import { clickOnOtherApp } from './src/modules/Access';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -61,7 +62,8 @@ function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const handlePress = () => {
     Overlay.startOverlay();
-    openOtherApp('tiktok://');
+    openOtherApp('tiktok://user/6837751091241681925');
+    clickOnOtherApp('id');
     return;
   };
   const backgroundStyle = {

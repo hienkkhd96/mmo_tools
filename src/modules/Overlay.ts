@@ -1,4 +1,5 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
+import { openOtherApp } from '../utils/openAnotherApp';
 
 const { OverlayModule } = NativeModules;
 const overlayEmitter = new NativeEventEmitter(OverlayModule);
@@ -6,7 +7,7 @@ const overlayEmitter = new NativeEventEmitter(OverlayModule);
 function setupListeners() {
   overlayEmitter.addListener('onStartEvent', () => {
     console.log('Start button clicked!');
-    // Handle the event here
+    openOtherApp('tiktok://profile?id=6837751091241681925');
   });
 
   overlayEmitter.addListener('onStopEvent', () => {
