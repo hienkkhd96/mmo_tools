@@ -1,13 +1,13 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
-import { openOtherApp } from '../utils/openAnotherApp';
+import { clickOnOtherApp } from './Access';
 
 const { OverlayModule } = NativeModules;
 const overlayEmitter = new NativeEventEmitter(OverlayModule);
 
 function setupListeners() {
   overlayEmitter.addListener('onStartEvent', () => {
+    clickOnOtherApp('com.ss.android.ugc.trill:id/cu9');
     console.log('Start button clicked!');
-    openOtherApp('tiktok://profile?id=6837751091241681925');
   });
 
   overlayEmitter.addListener('onStopEvent', () => {

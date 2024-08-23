@@ -3,5 +3,6 @@
     android:accessibilityEventTypes="typeWindowStateChanged|typeViewClicked"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="100"
+    android:canPerformGestures="true" 
     android:canRetrieveWindowContent="true"
     android:settingsActivity="com.example.mmo_tools.SettingsActivity"/>

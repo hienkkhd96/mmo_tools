@@ -1,7 +1,7 @@
-import {NativeModules} from 'react-native';
+import { NativeModules } from 'react-native';
 
-const {YourAccessibilityService} = NativeModules;
+const { AccessibilityModule } = NativeModules;
 
 export function clickOnOtherApp(id: string) {
-  YourAccessibilityService.performClick('id');
+  AccessibilityModule.clickButtonOnOtherApp(id);
 }
