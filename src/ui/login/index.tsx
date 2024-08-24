@@ -1,42 +1,100 @@
 import React from 'react';
+import {FieldValues, useForm} from 'react-hook-form';
 import {
+  KeyboardAvoidingView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import {Button} from 'react-native-paper';
+import InputBase from '../../components/input';
+import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 
 const Login = ({navigation}: any) => {
-  const handlePress = () => {
-    navigation.navigate('home', {
-      param: 'app-login',
-    });
+  const {
+    control,
+    handleSubmit,
+    formState: {errors},
+  } = useForm<FieldValues>({
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  });
+  const onSubmit = (data: FieldValues) => {
+    console.log(data);
     return;
   };
   return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
+    <KeyboardAvoidingView
+      style={{
+        flex: 1,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+      <View style={styles.container}>
         <Text style={styles.title}>Đăng nhập</Text>
         <View>
           <Text style={styles.text}>Welcome back you’ve</Text>
           <Text style={styles.text}>been missed!</Text>
         </View>
-        <TextInput style={styles.input} placeholder="Mã kích hoạt" />
-        <TouchableOpacity
-          key="kh1"
-          onPress={handlePress}
-          style={styles.buttonActive}>
-          <Text style={styles.buttonText}>Kích hoạt</Text>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.text}>Liên hệ mua key</Text>
-          <Text style={styles.text}>Zalo: 038.705.4982</Text>
-          <Text style={styles.text}>Tele: 038.705.4982</Text>
+        <View
+          style={{
+            width: '100%',
+          }}>
+          <InputBase
+            control={control}
+            name="username"
+            errors={errors}
+            label="Tài khoản"
+          />
+          <InputBase
+            control={control}
+            name="password"
+            errors={errors}
+            label="Mật khẩu"
+          />
+
+          <Button
+            mode="contained"
+            style={{
+              marginTop: 24,
+              backgroundColor: COLOR.primary,
+            }}
+            onPress={handleSubmit(onSubmit)}>
+            <Typo
+              color={COLOR.light}
+              styles={{
+                lineHeight: 38,
+                fontSize: 20,
+                fontFamily: 'Poppins-Bold',
+              }}>
+              Đăng nhập
+            </Typo>
+          </Button>
+
+          <View
+            style={{
+              marginTop: 14,
+              flexDirection: 'row',
+              gap: 8,
+            }}>
+            <Typo
+              type="subtitle2"
+              styles={{
+                color: COLOR.secondary,
+              }}>
+              Bạn chưa có tài khoản!
+            </Typo>
+            <TouchableOpacity>
+              <Typo type="subtitle2">Đăng ký ngay</Typo>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.socialView}>
+        {/* <View style={styles.socialView}>
           <TouchableOpacity key="kh2" style={styles.buttonSocial}>
             <Icon name="google" size={20} color="black" />
           </TouchableOpacity>
@@ -46,18 +104,18 @@ const Login = ({navigation}: any) => {
           <TouchableOpacity key="kh4" style={styles.buttonSocial}>
             <Icon name="telegram" size={20} color="black" />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#fff',
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 1,
+    width: '80%',
   },
   contentContainer: {
     display: 'flex',
