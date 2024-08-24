@@ -29,7 +29,13 @@ const AccountScreen = (props: Props) => {
       </Typo>
       <View style={{...styles.header, justifyContent: 'flex-start', gap: 10}}>
         <FaIcon name="user" size={20} color={COLOR.primary} />
-        <Typo type="h6">Quản lý tài khoản</Typo>
+        <Typo
+          type="subtitle1"
+          styles={{
+            fontWeight: 'bold',
+          }}>
+          Quản lý tài khoản
+        </Typo>
       </View>
       <List.Section
         style={{
