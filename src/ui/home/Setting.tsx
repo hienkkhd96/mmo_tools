@@ -1,20 +1,20 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  Touchable,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {List, RadioButton, TextInput} from 'react-native-paper';
-import AntIcon from 'react-native-vector-icons/AntDesign';
+import {Dropdown} from 'react-native-element-dropdown';
+import {Button, List, RadioButton, TextInput} from 'react-native-paper';
 import FaIcon from 'react-native-vector-icons/FontAwesome5';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
-import {Dropdown} from 'react-native-element-dropdown';
+import {openOtherApp} from '../../utils/openAnotherApp';
+import Overlay from '../../../src/modules/Overlay';
+import {clickOnOtherApp, sendDataToAccess} from '../../modules/Access';
 
 type Props = {};
 
@@ -214,6 +214,10 @@ const SettingScreen = (props: Props) => {
             marginBottom: 40,
           }}>
           <List.Accordion
+            style={{
+              backgroundColor: COLOR.quinary,
+              borderRadius: 8,
+            }}
             title={
               <View
                 style={{
@@ -263,6 +267,20 @@ const SettingScreen = (props: Props) => {
               }}
             />
           </List.Accordion>
+          <Button
+            mode="contained"
+            onPress={() => {
+              Overlay.startOverlay();
+              openOtherApp('tiktok://');
+            }}
+            style={{
+              borderRadius: 8,
+              paddingVertical: 6,
+              elevation: 1,
+              marginTop: 10,
+            }}>
+            Mở App
+          </Button>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

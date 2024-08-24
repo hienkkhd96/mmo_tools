@@ -21,6 +21,7 @@ function App(): React.JSX.Element {
           }}>
           <Stack.Screen name="login" component={Login} />
           <Stack.Screen name="home" component={Bottomnavigation} />
+          <Stack.Screen name="account/:id" component={Bottomnavigation} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

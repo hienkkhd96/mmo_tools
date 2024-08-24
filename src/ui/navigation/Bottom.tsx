@@ -2,14 +2,14 @@ import React from 'react';
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {CommonActions} from '@react-navigation/native';
+import {TouchableOpacity} from 'react-native';
 import {BottomNavigation} from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FeaIcon from 'react-native-vector-icons/Feather';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {COLOR} from '../../constant';
-import AccountScreen from '../home/Account';
-import SettingScreen from '../home/Setting';
-import Typo from '../../components/text';
 import ReportScreen from '../home/Report';
+import SettingScreen from '../home/Setting';
+import AccountScreen from '../home/Account';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,6 +28,7 @@ export default function Bottomnavigation() {
       }}
       tabBar={({navigation, state, descriptors, insets}) => (
         <BottomNavigation.Bar
+          key={1}
           navigationState={state}
           style={{
             backgroundColor: COLOR.light,
@@ -57,6 +58,9 @@ export default function Bottomnavigation() {
 
             return null;
           }}
+          renderTouchable={({key, ...props}: any) => (
+            <TouchableOpacity key={key} {...props} />
+          )}
           getLabelText={({route}) => {
             const {options} = descriptors[route.key];
             const label =
@@ -76,7 +80,9 @@ export default function Bottomnavigation() {
         component={SettingScreen}
         options={{
           tabBarIcon: ({color, size}) => {
-            return <FeaIcon name="layout" size={size} color={color} />;
+            return (
+              <FeaIcon key="layout" name="layout" size={size} color={color} />
+            );
           },
         }}
       />
@@ -87,17 +93,29 @@ export default function Bottomnavigation() {
         options={{
           tabBarIcon: ({color, size}) => {
             return (
-              <Icon name="clock-time-eight-outline" size={size} color={color} />
+              <Icon
+                key="clock"
+                name="clock-time-eight-outline"
+                size={size}
+                color={color}
+              />
             );
           },
         }}
       />
       <Tab.Screen
-        name="Tài khoản"
+        name="Nền tảng"
         component={AccountScreen}
         options={{
           tabBarIcon: ({color, size}) => {
-            return <FeaIcon name="user" size={size} color={color} />;
+            return (
+              <Icon
+                key="platform"
+                name="database-cog-outline"
+                size={size}
+                color={color}
+              />
+            );
           },
         }}
       />

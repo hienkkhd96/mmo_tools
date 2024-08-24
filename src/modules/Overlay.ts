@@ -1,18 +1,17 @@
-import { NativeEventEmitter, NativeModules } from 'react-native';
-import { clickOnOtherApp } from './Access';
+import {NativeEventEmitter, NativeModules} from 'react-native';
+import {clickOnOtherApp} from './Access';
 
-const { OverlayModule } = NativeModules;
+const {OverlayModule} = NativeModules;
 const overlayEmitter = new NativeEventEmitter(OverlayModule);
 
 function setupListeners() {
-  overlayEmitter.addListener('onStartEvent', () => {
+  overlayEmitter.addListener('onStartEvent', async () => {
     clickOnOtherApp('com.ss.android.ugc.trill:id/cu9');
-    console.log('Start button clicked!');
   });
 
   overlayEmitter.addListener('onStopEvent', () => {
     console.log('Stop button clicked!');
-    // Handle the event here
+    overlayEmitter.removeAllListeners('onStartEvent');
   });
 }
 

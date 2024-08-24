@@ -19,4 +19,9 @@ class AccessibilityModule(private val  reactContext: ReactApplicationContext) : 
         intent.putExtra("BUTTON_TEXT", buttonText)
         reactContext.sendBroadcast(intent)
     }
+    @ReactMethod
+    fun sendDataToNative(data: String) {
+        // Xử lý dữ liệu từ React Native
+        println("Received data from React Native: $data")
+    }
 }
