@@ -11,11 +11,8 @@ import {Button} from 'react-native-paper';
 import InputBase from '../../components/input';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
-import authApi from '../../api/auth';
-type Props = {
-  navigation: any;
-};
-const Login = ({navigation}: Props) => {
+
+const Register = ({navigation}: any) => {
   const {
     control,
     handleSubmit,
@@ -26,17 +23,12 @@ const Login = ({navigation}: Props) => {
       password: '',
     },
   });
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const res = await authApi.login(data.username, data.password);
-      console.log(res);
-    } catch (error: any) {
-      console.log(error?.response.data);
-    }
-    return;
+  const handleToLogin = () => {
+    navigation.navigate('login');
   };
-  const handleToRegister = () => {
-    navigation.navigate('register');
+  const onSubmit = (data: FieldValues) => {
+    console.log(data);
+    return;
   };
   return (
     <KeyboardAvoidingView
@@ -47,7 +39,7 @@ const Login = ({navigation}: Props) => {
         alignItems: 'center',
       }}>
       <View style={styles.container}>
-        <Text style={styles.title}>Đăng nhập</Text>
+        <Text style={styles.title}>Đăng ký</Text>
         <View>
           <Text style={styles.text}>Welcome back you’ve</Text>
           <Text style={styles.text}>been missed!</Text>
@@ -83,10 +75,9 @@ const Login = ({navigation}: Props) => {
                 fontSize: 20,
                 fontFamily: 'Poppins-Bold',
               }}>
-              Đăng nhập
+              Đăng ký
             </Typo>
           </Button>
-
           <View
             style={{
               marginTop: 14,
@@ -98,9 +89,9 @@ const Login = ({navigation}: Props) => {
               styles={{
                 color: COLOR.secondary,
               }}>
-              Bạn chưa có tài khoản!
+              Bạn đã có tài khoản!
             </Typo>
-            <TouchableOpacity onPress={handleToRegister}>
+            <TouchableOpacity onPress={handleToLogin}>
               <Typo
                 type="subtitle2"
                 styles={{
@@ -108,7 +99,7 @@ const Login = ({navigation}: Props) => {
                   textDecorationColor: COLOR.primary,
                   textAlign: 'end',
                 }}>
-                Đăng ký ngay
+                Đăng nhập
               </Typo>
             </TouchableOpacity>
           </View>
@@ -209,4 +200,4 @@ const styles = StyleSheet.create({
     height: 44,
   },
 });
-export default Login;
+export default Register;

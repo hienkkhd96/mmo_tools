@@ -7,6 +7,7 @@ import MuiIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
+import {useAppStore} from '../../../store/app.store';
 
 type Props = {
   navigation: any;
@@ -22,6 +23,8 @@ const PlatformList = ({navigation}: Props) => {
   const onPlatformLogin = () => {
     setIsPlatformLogin(!isPlatformLogin);
   };
+  const token = useAppStore(state => state.token);
+
   const hadlePressPlatform = (platform: PlatformType) => {
     navigation.navigate(`accounts`, {
       platformKey: platform.key,
@@ -51,7 +54,7 @@ const PlatformList = ({navigation}: Props) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Typo type="h5">Mã: ahdjsa***</Typo>
+        <Typo type="h5">Mã: {token}</Typo>
         <FaIcon name="eye-slash" size={22} color={COLOR.primary} />
       </View>
       <Typo

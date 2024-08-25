@@ -1,4 +1,5 @@
-import React from 'react';
+import {Icon} from '@rneui/base';
+import React, {useEffect, useState} from 'react';
 import {FieldValues, useForm} from 'react-hook-form';
 import {
   KeyboardAvoidingView,
@@ -8,30 +9,48 @@ import {
   View,
 } from 'react-native';
 import {Button} from 'react-native-paper';
+import authApi from '../../api/auth';
 import InputBase from '../../components/input';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
-import authApi from '../../api/auth';
+import {useAppStore} from '../../store/app.store';
+import {useSnackbarStore} from '../../store/snackbar.store';
+
 type Props = {
   navigation: any;
 };
-const Login = ({navigation}: Props) => {
+const LoginByKey = ({navigation}: Props) => {
   const {
     control,
     handleSubmit,
     formState: {errors},
   } = useForm<FieldValues>({
     defaultValues: {
-      username: '',
-      password: '',
+      key: '',
     },
   });
+  const snackBar = useSnackbarStore();
+  const appStore = useAppStore();
+
   const onSubmit = async (data: FieldValues) => {
     try {
-      const res = await authApi.login(data.username, data.password);
-      console.log(res);
+      const res = await authApi.loginByKey(data.key);
+      const loginData = res?.data;
+      if (res.status === 200 && loginData?.accessToken) {
+        await appStore.setToken({
+          token: data.key,
+          accessToken: loginData?.accessToken,
+          refreshToken: loginData?.refreshToken,
+          isAuthenticated: true,
+        });
+        snackBar.setMessage('Kích hoạt thành công', 'success');
+        navigation.navigate('home');
+        return;
+      } else {
+        throw new Error('Kích hoạt thất bại');
+      }
     } catch (error: any) {
-      console.log(error?.response.data);
+      snackBar.setMessage('Đăng nhập thất bại', 'error');
     }
     return;
   };
@@ -58,15 +77,9 @@ const Login = ({navigation}: Props) => {
           }}>
           <InputBase
             control={control}
-            name="username"
+            name="key"
             errors={errors}
-            label="Tài khoản"
-          />
-          <InputBase
-            control={control}
-            name="password"
-            errors={errors}
-            label="Mật khẩu"
+            label="Mã kích hoạt"
           />
 
           <Button
@@ -75,55 +88,42 @@ const Login = ({navigation}: Props) => {
               marginTop: 24,
               backgroundColor: COLOR.primary,
             }}
+            labelStyle={{
+              fontSize: 24,
+              padding: 8,
+            }}
             onPress={handleSubmit(onSubmit)}>
-            <Typo
-              color={COLOR.light}
-              styles={{
-                lineHeight: 38,
-                fontSize: 20,
-                fontFamily: 'Poppins-Bold',
-              }}>
-              Đăng nhập
-            </Typo>
+            Kích hoạt
           </Button>
 
           <View
             style={{
               marginTop: 14,
-              flexDirection: 'row',
-              gap: 8,
+              alignItems: 'center',
             }}>
             <Typo
-              type="subtitle2"
+              type="h6"
               styles={{
                 color: COLOR.secondary,
               }}>
-              Bạn chưa có tài khoản!
+              Liên hệ mua key:
             </Typo>
-            <TouchableOpacity onPress={handleToRegister}>
-              <Typo
-                type="subtitle2"
-                styles={{
-                  textDecorationLine: 'underline',
-                  textDecorationColor: COLOR.primary,
-                  textAlign: 'end',
-                }}>
-                Đăng ký ngay
-              </Typo>
-            </TouchableOpacity>
+            <Typo type="subtitle1">Zalo: 038.705.4982</Typo>
+            <Typo type="subtitle1">Tele: 038.705.4982</Typo>
+            <Typo type="subtitle1">Tele: 038.705.4982</Typo>
           </View>
         </View>
-        {/* <View style={styles.socialView}>
-          <TouchableOpacity key="kh2" style={styles.buttonSocial}>
-            <Icon name="google" size={20} color="black" />
+        <View style={styles.socialView}>
+          <TouchableOpacity style={styles.buttonSocial}>
+            <Icon name="snapchat" size={20} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity key="kh3" style={styles.buttonSocial}>
+          <TouchableOpacity style={styles.buttonSocial}>
             <Icon name="facebook" size={20} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity key="kh4" style={styles.buttonSocial}>
+          <TouchableOpacity style={styles.buttonSocial}>
             <Icon name="telegram" size={20} color="black" />
           </TouchableOpacity>
-        </View> */}
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -209,4 +209,4 @@ const styles = StyleSheet.create({
     height: 44,
   },
 });
-export default Login;
+export default LoginByKey;

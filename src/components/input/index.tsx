@@ -10,9 +10,9 @@ import {TextInput, TextInputProps} from 'react-native-paper';
 import {COLOR} from '../../constant';
 
 type Props = {
-  control?: Control<FieldValues, any>;
+  control: Control<FieldValues, any>;
   rules?: any;
-  errors: any;
+  errors?: any;
   label?: string;
   name: string;
   placeholder?: string;
@@ -21,8 +21,8 @@ type Props = {
 const InputBase = (props: Props & TextInputProps) => {
   const {
     control,
-    rules,
-    errors,
+    rules = {},
+    errors = {},
     label,
     name,
     placeholder,
@@ -53,7 +53,7 @@ const InputBase = (props: Props & TextInputProps) => {
         )}
         name={name}
       />
-      {errors[name] && <Text>This is required.</Text>}
+      {errors && errors?.[name] && <Text>This is required.</Text>}
     </View>
   );
 };

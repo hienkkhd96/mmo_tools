@@ -10,16 +10,17 @@ import {
 import {Dropdown} from 'react-native-element-dropdown';
 import {Button, List, RadioButton, TextInput} from 'react-native-paper';
 import FaIcon from 'react-native-vector-icons/FontAwesome5';
+import Overlay from '../../../src/modules/Overlay';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import {openOtherApp} from '../../utils/openAnotherApp';
-import Overlay from '../../../src/modules/Overlay';
-import {clickOnOtherApp, sendDataToAccess} from '../../modules/Access';
+import {useAppStore} from '../../store/app.store';
 
 type Props = {};
 
 const SettingScreen = (props: Props) => {
   const [value, setValue] = React.useState('golike');
+  const token = useAppStore(state => state.token);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -28,7 +29,7 @@ const SettingScreen = (props: Props) => {
       }}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Typo type="h5">Mã: ahdjsa***</Typo>
+          <Typo type="h5">Mã: {token}</Typo>
           <FaIcon name="eye-slash" size={22} color={COLOR.primary} />
         </View>
         <Typo
