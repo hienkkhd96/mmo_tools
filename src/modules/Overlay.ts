@@ -1,22 +1,20 @@
 import {NativeEventEmitter, NativeModules} from 'react-native';
-import {clickOnOtherApp} from './Access';
+import {clickOnOtherApp, stopAutoCollect} from './Access';
 
 const {OverlayModule} = NativeModules;
 const overlayEmitter = new NativeEventEmitter(OverlayModule);
 
 function setupListeners() {
   overlayEmitter.addListener('onStartEvent', async () => {
-    clickOnOtherApp('com.ss.android.ugc.trill:id/cu9');
+    clickOnOtherApp();
   });
 
   overlayEmitter.addListener('onStopEvent', () => {
-    console.log('Stop button clicked!');
-    overlayEmitter.removeAllListeners('onStartEvent');
+    stopAutoCollect();
   });
 }
 
 // Don't forget to remove listeners when they are no longer needed
-
 // Call setupListeners when you need to start listening
 setupListeners();
 

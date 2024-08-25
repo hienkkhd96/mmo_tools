@@ -1,18 +1,21 @@
-import React, {useState} from 'react';
-import {Platform, ScrollView, StyleSheet, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {FieldValues, useForm} from 'react-hook-form';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {Button, List} from 'react-native-paper';
 import AntIcon from 'react-native-vector-icons/AntDesign';
+import {platformAccountApi} from '../../../api/platform-account';
+import InputBase from '../../../components/input';
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
-import {PlatformType} from './PlatformList';
-import {KeyboardAvoidingView} from 'react-native';
-import InputBase from '../../../components/input';
-import {FieldValues, useForm} from 'react-hook-form';
-import {openOtherApp} from '../../../utils/openAnotherApp';
 import {PlatformFactory} from '../../../platform/platform.factory';
-import {PLATFORM_TYPE} from '../../../platform/type';
 import {useSnackbarStore} from '../../../store/snackbar.store';
-import {platformAccountApi} from '../../../api/platform-account';
+import {PlatformType} from './PlatformList';
 
 type Props = {
   navigation: any;
@@ -34,16 +37,15 @@ const AccountList = ({navigation, route}: Props) => {
     },
   });
   const snackbar = useSnackbarStore();
+  const [accounts, setAccounts] = useState([]);
   const onSubmit = async (data: FieldValues) => {
     try {
       const platform = PlatformFactory.createPlatform(data.token, platformKey);
       const res = await platform.getMe();
       if (res.data && res.status === 200) {
-        const accountRes = await platformAccountApi.addAccount(data.token);
-        console.log(accountRes);
+        await platformAccountApi.addAccount(data.token);
         snackbar.setMessage('Thêm tài khoản thành công', 'success');
       }
-      console.log(res.data);
     } catch (error: any) {
       if (error?.response?.status === 401) {
         snackbar.setMessage('Token không hợp lệ!', 'error');
@@ -77,6 +79,23 @@ const AccountList = ({navigation, route}: Props) => {
       totalAccounts: 10,
     },
   ];
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await platformAccountApi.getAccounts(platformKey);
+        setAccounts(res.data);
+      } catch (error: any) {
+        snackbar.setMessage(
+          typeof error === 'string'
+            ? error
+            : error?.message ||
+                'Lấy danh sách tài khoản thất bại. Vui lòng kiểm tra lại.',
+          'error',
+        );
+      }
+    };
+    fetchAccounts();
+  }, [platformKey]);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -90,11 +109,11 @@ const AccountList = ({navigation, route}: Props) => {
           <Typo type="h6">{platformName || platformKey}</Typo>
         </View>
         <List.Section>
-          {platformList.map(platform => {
+          {accounts.map(account => {
             return (
               <List.Item
-                key={platform.key}
-                title={<Typo>{platform.name}</Typo>}
+                key={account}
+                title={<Typo>{account.name}</Typo>}
                 style={{
                   paddingHorizontal: 10,
                   borderTopWidth: 1,
@@ -116,12 +135,9 @@ const AccountList = ({navigation, route}: Props) => {
                         height: 38,
                         borderRadius: 15,
                         backgroundColor: COLOR.primary,
-                      }}>
-                      {platform.icon}
-                    </View>
+                      }}></View>
                   </View>
                 )}
-                description={`${platform.totalAccounts} tài khoản`}
                 right={() => (
                   <List.Icon icon="trash-can-outline" color={'black'} />
                 )}

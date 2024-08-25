@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -15,12 +15,39 @@ import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import {openOtherApp} from '../../utils/openAnotherApp';
 import {useAppStore} from '../../store/app.store';
+import {sendDataToAccess} from '../../modules/Access';
 
 type Props = {};
-
+type FormField = {
+  platform: string;
+  platformAccount: string;
+  channel: string;
+  workAccount: string;
+  stopBeforeSuccess: number;
+  stopBeforeError: number;
+  timeDelay: number;
+};
 const SettingScreen = (props: Props) => {
-  const [value, setValue] = React.useState('golike');
   const token = useAppStore(state => state.token);
+  const [formData, setFormData] = useState<FormField>({
+    platform: 'golike',
+    platformAccount:
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ1NjA0NzMsImV4cCI6MTc1NjA5NjQ3MywibmJmIjoxNzI0NTYwNDczLCJqdGkiOiJocTluOHFFMUxWNTNKZ1JRIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.jfgavMipl4AqyJxsr0GttSd7wFlexDiA7spmMQEUKv4',
+    channel: 'tiktok',
+    workAccount: '803733',
+    stopBeforeSuccess: 9999,
+    stopBeforeError: 9999,
+    timeDelay: 5,
+  });
+  const [accounts, setAccounts] = useState([
+    {
+      token:
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ1NjA0NzMsImV4cCI6MTc1NjA5NjQ3MywibmJmIjoxNzI0NTYwNDczLCJqdGkiOiJocTluOHFFMUxWNTNKZ1JRIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.jfgavMipl4AqyJxsr0GttSd7wFlexDiA7spmMQEUKv4',
+      type: 'golike',
+      account_name: 'test',
+    },
+  ]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -64,8 +91,10 @@ const SettingScreen = (props: Props) => {
             Chọn nền tảng
           </Typo>
           <RadioButton.Group
-            onValueChange={newValue => setValue(newValue)}
-            value={value}>
+            onValueChange={newValue =>
+              setFormData(prev => ({...prev, platform: newValue}))
+            }
+            value={formData.platform}>
             <View
               style={{
                 flexDirection: 'row',
@@ -78,7 +107,7 @@ const SettingScreen = (props: Props) => {
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setValue('golike');
+                  setFormData(prev => ({...prev, platform: 'golike'}));
                 }}>
                 <RadioButton value="golike" />
                 <Typo>Golike</Typo>
@@ -86,22 +115,23 @@ const SettingScreen = (props: Props) => {
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setValue('sub');
+                  setFormData(prev => ({...prev, platform: 'tds'}));
                 }}>
-                <RadioButton value="sub" />
+                <RadioButton value="tds" />
                 <Typo>TDS</Typo>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setValue('activity');
+                  setFormData(prev => ({...prev, platform: 'ttc'}));
                 }}>
-                <RadioButton value="activity" />
+                <RadioButton value="ttc" />
                 <Typo>TTC</Typo>
               </TouchableOpacity>
             </View>
           </RadioButton.Group>
         </View>
+
         <View>
           <Typo
             styles={{
@@ -124,14 +154,12 @@ const SettingScreen = (props: Props) => {
             itemContainerStyle={{
               borderRadius: 4,
             }}
-            value={'golike'}
-            data={[
-              {
-                value: 'golike',
-                label: 'Golike',
-              },
-            ]}
-            labelField={'label'}
+            value={formData.platformAccount}
+            data={accounts.map(account => ({
+              value: account.token,
+              label: account.account_name,
+            }))}
+            labelField="label"
             valueField="value"
             onChange={value => {
               console.log('value selected:', value);
@@ -160,11 +188,11 @@ const SettingScreen = (props: Props) => {
             itemContainerStyle={{
               borderRadius: 4,
             }}
-            value={'golike'}
+            value={formData.channel}
             data={[
               {
-                value: 'golike',
-                label: 'Golike',
+                value: 'tiktok',
+                label: 'Tiktok',
               },
             ]}
             labelField={'label'}
@@ -196,11 +224,11 @@ const SettingScreen = (props: Props) => {
             itemContainerStyle={{
               borderRadius: 4,
             }}
-            value={'golike'}
+            value={formData.workAccount}
             data={[
               {
-                value: 'golike',
-                label: 'Golike',
+                value: '803733',
+                label: 'supperhien5',
               },
             ]}
             labelField={'label'}
@@ -241,6 +269,7 @@ const SettingScreen = (props: Props) => {
               mode="outlined"
               label="Dừng sau khi hoàn thành"
               placeholder="VD: 1000"
+              value={formData.stopBeforeSuccess.toString()}
               style={{
                 borderColor: COLOR.primary,
                 backgroundColor: '#F1F4FF',
@@ -251,6 +280,7 @@ const SettingScreen = (props: Props) => {
               mode="outlined"
               label="Dừng sau khi thất bại"
               placeholder="VD: 1000"
+              value={formData.stopBeforeError.toString()}
               style={{
                 borderColor: COLOR.primary,
                 backgroundColor: '#F1F4FF',
@@ -260,7 +290,8 @@ const SettingScreen = (props: Props) => {
             <TextInput
               mode="outlined"
               label="Thời gian nghỉ sau mỗi lần hoàn thành"
-              placeholder="VD: 1000"
+              value={formData.timeDelay.toString()}
+              placeholder="VD: 1"
               style={{
                 borderColor: COLOR.primary,
                 backgroundColor: '#F1F4FF',
@@ -271,6 +302,7 @@ const SettingScreen = (props: Props) => {
           <Button
             mode="contained"
             onPress={() => {
+              sendDataToAccess(formData);
               Overlay.startOverlay();
               openOtherApp('tiktok://');
             }}
