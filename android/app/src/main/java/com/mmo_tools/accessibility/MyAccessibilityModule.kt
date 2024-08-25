@@ -1,27 +1,33 @@
 package com.mmo_tools.accessibility
 
+import android.content.Intent
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import android.content.Context
-import android.content.Intent
-import android.accessibilityservice.AccessibilityService
 
-class AccessibilityModule(private val  reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class AccessibilityModule(private val reactContext: ReactApplicationContext) :
+        ReactContextBaseJavaModule(reactContext) {
+    public var data: String? = null
 
     override fun getName(): String {
         return "AccessibilityModule"
     }
 
     @ReactMethod
-    fun clickButtonOnOtherApp(buttonText: String) {
+    fun clickButtonOnOtherApp() {
         val intent = Intent("com.mmo_tools.accessibility.ACTION_CLICK_BUTTON")
-        intent.putExtra("BUTTON_TEXT", buttonText)
+        intent.putExtra("data_mmo", this.data)
         reactContext.sendBroadcast(intent)
     }
     @ReactMethod
     fun sendDataToNative(data: String) {
-        // Xử lý dữ liệu từ React Native
-        println("Received data from React Native: $data")
+        this.data = data
+    }
+
+    @ReactMethod
+    fun stopAutoCollect() {
+        val intent = Intent("com.mmo_tools.accessibility.STOP_AUTO_COLLECT")
+        intent.putExtra("data_mmo", this.data)
+        reactContext.sendBroadcast(intent)
     }
 }

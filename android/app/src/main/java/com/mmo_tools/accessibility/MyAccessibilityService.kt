@@ -1,5 +1,7 @@
 package com.mmo_tools.accessibility
 
+import CompleteJobPayload
+import TiktokJobResponse
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.BroadcastReceiver
@@ -8,11 +10,30 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Path
 import android.graphics.Rect
+import android.net.Uri
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.google.gson.Gson
+import golikeService
+import kotlinx.coroutines.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+data class FormField(
+        val platform: String,
+        val platformAccount: String,
+        val channel: String,
+        val workAccount: String,
+        val stopBeforeSuccess: Int,
+        val stopBeforeError: Int,
+        val timeDelay: Int
+)
 
 class MyAccessibilityService : AccessibilityService() {
+    public var appData: FormField? = null
+    public var isStoped: Boolean = false
     companion object {
         private var accessibilityService: MyAccessibilityService? = null
 
@@ -24,8 +45,14 @@ class MyAccessibilityService : AccessibilityService() {
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     if (intent.action == "com.mmo_tools.accessibility.ACTION_CLICK_BUTTON") {
-                        val buttonText = intent.getStringExtra("BUTTON_TEXT")
-                        performClickOnTarget(buttonText ?: "")
+                        isStoped = false
+                        val data = intent.getStringExtra("data_mmo").toString()
+                        val gson = Gson()
+                        val appForm = gson.fromJson(data, FormField::class.java)
+                        appData = appForm
+                        handleAutoCollect()
+                    } else if (intent.action == "com.mmo_tools.accessibility.STOP_AUTO_COLLECT") {
+                        isStoped = true
                     }
                 }
             }
@@ -35,6 +62,11 @@ class MyAccessibilityService : AccessibilityService() {
         registerReceiver(
                 receiver,
                 IntentFilter("com.mmo_tools.accessibility.ACTION_CLICK_BUTTON"),
+                Context.RECEIVER_EXPORTED
+        )
+        registerReceiver(
+                receiver,
+                IntentFilter("com.mmo_tools.accessibility.STOP_AUTO_COLLECT"),
                 Context.RECEIVER_EXPORTED
         )
     }
@@ -53,6 +85,60 @@ class MyAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         setAccessibilityService(this)
+    }
+    private fun handleAutoCollect() {
+        if (appData == null || isStoped) {
+            return
+        }
+        val dataCollector = appData
+        val account_id = dataCollector?.workAccount
+        if (account_id == null) {
+            return
+        }
+        val call =
+                golikeService.getJobs(
+                        null,
+                        accountId = account_id,
+                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                )
+        call.enqueue(
+                object : Callback<TiktokJobResponse> {
+                    override fun onResponse(
+                            call: Call<TiktokJobResponse>,
+                            response: Response<TiktokJobResponse>
+                    ) {
+                        if (response.isSuccessful) {
+                            val job = response.body()
+                            val type = job?.data?.type
+                            val objectId = job?.data?.object_id
+                            val job_id = job?.data?.id
+                            if (type == null || objectId == null || job_id == null) {
+                                return
+                            }
+                            if (type == "like") {
+                                openSchemaUrl(url = "tiktok://aweme/detail/$objectId")
+                                delay(2000)
+                                performClickOnTarget("com.ss.android.ugc.trill:id/d72")
+                            } else if (type == "follow") {
+                                openSchemaUrl(url = "tiktok://profile?id=$objectId")
+                                delay(2000)
+                                performClickOnTarget("com.ss.android.ugc.trill:id/cu9")
+                            }
+                            delay(2000)
+                            completeJob(account_id, job_id.toString())
+                            delay(5000)
+                            handleAutoCollect()
+                        } else {
+
+                            println("Request failed with status: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<TiktokJobResponse>, t: Throwable) {
+                        println("Error: ${t.message}")
+                    }
+                }
+        )
     }
     private fun performClickOnTarget(buttonText: String) {
         val rootNode: AccessibilityNodeInfo? = rootInActiveWindow
@@ -109,6 +195,12 @@ class MyAccessibilityService : AccessibilityService() {
         gestureBuilder.addStroke(GestureDescription.StrokeDescription(path, 0, 100))
         dispatchGesture(gestureBuilder.build(), null, null)
     }
+    public fun openSchemaUrl(url: String) {
+        println("Opening schema url: ${Uri.parse(url)}")
+        val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(url) }
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+    }
 
     public fun getCenterX(node: AccessibilityNodeInfo): Int {
         val rect = Rect()
@@ -121,5 +213,40 @@ class MyAccessibilityService : AccessibilityService() {
         node.getBoundsInScreen(rect)
         val centerY = rect.centerY()
         return centerY.toInt()
+    }
+
+    public fun completeJob(account_id: String, job_id: String) {
+        if (appData == null) {
+            return
+        }
+        val dataCollector = appData
+        val call =
+                golikeService.completeJob(
+                        CompleteJobPayload(
+                                ads_id = job_id,
+                                account_id = account_id,
+                                async = true,
+                                data = null
+                        ),
+                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                )
+
+        call.enqueue(
+                object : Callback<Any> {
+                    override fun onResponse(call: Call<Any>, response: Response<Any>) {
+                        if (response.isSuccessful) {
+                            println("Job completed successfully")
+                        } else {
+                            println("Request failed with status: ${response.message()}")
+                        }
+                    }
+                    override fun onFailure(call: Call<Any>, t: Throwable) {
+                        println("Error: ${t.message}")
+                    }
+                }
+        )
+    }
+    public fun delay(time: Long) {
+        Thread.sleep(time)
     }
 }
