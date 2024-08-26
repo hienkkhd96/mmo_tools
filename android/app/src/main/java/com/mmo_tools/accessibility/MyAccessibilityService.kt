@@ -12,6 +12,9 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
+import android.view.WindowInsets
+import android.view.WindowManager
+import android.view.WindowMetrics
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.google.gson.Gson
@@ -20,12 +23,7 @@ import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.widget.Button
-import android.widget.ImageView
-import android.view.View
-import android.view.WindowMetrics
-import android.view.WindowManager
-import android.view.WindowInsets
+
 data class FormField(
         val platform: String,
         val platformAccount: String,
@@ -39,6 +37,11 @@ data class FormField(
 class MyAccessibilityService : AccessibilityService() {
     public var appData: FormField? = null
     public var isStoped: Boolean = false
+    public var rowSize: Int = 0
+    public var columnSize: Int = 0
+    public val positionFollow: Pair<Int, Int> = Pair(31, 38)
+    public val positionLike: Pair<Int, Int> = Pair(100, 66)
+
     companion object {
         private var accessibilityService: MyAccessibilityService? = null
 
@@ -74,6 +77,9 @@ class MyAccessibilityService : AccessibilityService() {
                 IntentFilter("com.mmo_tools.accessibility.STOP_AUTO_COLLECT"),
                 Context.RECEIVER_EXPORTED
         )
+        val (screenWidth, screenHeight) = getScreenSize()
+        rowSize = screenWidth / 100
+        columnSize = screenHeight / 100
     }
 
     override fun onDestroy() {
@@ -95,7 +101,6 @@ class MyAccessibilityService : AccessibilityService() {
         if (appData == null || isStoped) {
             return
         }
-        val (screenWidth, screenHeight) = getScreenSize()
         val dataCollector = appData
         val account_id = dataCollector?.workAccount
         if (account_id == null) {
@@ -105,7 +110,7 @@ class MyAccessibilityService : AccessibilityService() {
                 golikeService.getJobs(
                         null,
                         accountId = account_id,
-                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                        authHeader = "Bearer ${dataCollector.platformAccount}"
                 )
         call.enqueue(
                 object : Callback<TiktokJobResponse> {
@@ -124,11 +129,13 @@ class MyAccessibilityService : AccessibilityService() {
                             if (type == "like") {
                                 openSchemaUrl(url = "tiktok://aweme/detail/$objectId")
                                 delay(2000)
-                                performClickOnTarget("com.ss.android.ugc.trill:id/d8k",type="byId")
+                                val (x, y) = positionLike
+                                autoClick(x * rowSize, y * columnSize)
                             } else if (type == "follow") {
                                 openSchemaUrl(url = "tiktok://profile?id=$objectId")
                                 delay(2000)
-                                performClickOnTarget("com.ss.android.ugc.trill:id/cu9",type="byId")
+                                val (x, y) = positionFollow
+                                autoClick(x * rowSize, y * columnSize)
                             }
                             delay(2000)
                             completeJob(account_id, job_id.toString())
@@ -148,28 +155,22 @@ class MyAccessibilityService : AccessibilityService() {
                 }
         )
     }
-    private fun performClickOnTarget(buttonText: String,type:String) {
-        val cellSize = 40
+    private fun performClickOnTarget(buttonText: String, type: String) {
         val rootNode: AccessibilityNodeInfo? = rootInActiveWindow
         rootNode?.let {
-            var nodes:List<AccessibilityNodeInfo>?
-            if (type ==="byId") {
+            var nodes: List<AccessibilityNodeInfo>?
+            if (type === "byId") {
                 nodes = findNodesByViewId(buttonText)
             } else {
-                nodes = findNodesByText(rootNode,buttonText)
+                nodes = findNodesByText(rootNode, buttonText)
             }
-         
+
             if (nodes.isNotEmpty()) {
                 val nodeToClick = nodes[0]
                 if (type === "byId") {
                     Log.d("MyAccessibilityService", "Clicking node: ${nodeToClick.text}")
                     val (buttonX, buttonY) = getViewPositionOnScreen(nodeToClick)
-                    val buttonXCell = getCellIndex(buttonX, cellSize)
-                    val buttonYCell = getCellIndex(buttonY, cellSize)
-                    println(buttonXCell)
-                    println(buttonYCell)
                     autoClick(buttonX, buttonY)
-
                 } else {
                     Log.d("MyAccessibilityService", "Clicking node: ${nodeToClick.text}")
                     val centerX = getCenterX(nodeToClick)
@@ -237,7 +238,7 @@ class MyAccessibilityService : AccessibilityService() {
         val centerY = rect.centerY()
         return centerY.toInt()
     }
-    public fun getViewPositionOnScreen(node:AccessibilityNodeInfo):Pair<Int,Int> {
+    public fun getViewPositionOnScreen(node: AccessibilityNodeInfo): Pair<Int, Int> {
         val rect = Rect()
         node.getBoundsInScreen(rect)
         val centerX = rect.centerX()
@@ -282,15 +283,17 @@ class MyAccessibilityService : AccessibilityService() {
     fun getScreenSize(): Pair<Int, Int> {
         val wm = this.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val windowMetrics: WindowMetrics = wm.currentWindowMetrics
-        val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
-        
+        val insets =
+                windowMetrics.windowInsets.getInsetsIgnoringVisibility(
+                        WindowInsets.Type.systemBars()
+                )
+
         val width = windowMetrics.bounds.width() - insets.left - insets.right
         val height = windowMetrics.bounds.height() - insets.top - insets.bottom
-    
+
         return Pair(width, height)
     }
     fun getCellIndex(position: Int, cellSize: Int): Int {
         return position / cellSize
     }
-    
 }
