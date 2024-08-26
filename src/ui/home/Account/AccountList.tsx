@@ -16,6 +16,7 @@ import {COLOR} from '../../../constant';
 import {PlatformFactory} from '../../../platform/platform.factory';
 import {useSnackbarStore} from '../../../store/snackbar.store';
 import {PlatformType} from './PlatformList';
+import AccountItem, {Account} from '../../../components/item/AccountItem';
 
 type Props = {
   navigation: any;
@@ -37,14 +38,23 @@ const AccountList = ({navigation, route}: Props) => {
     },
   });
   const snackbar = useSnackbarStore();
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const onSubmit = async (data: FieldValues) => {
     try {
       const platform = PlatformFactory.createPlatform(data.token, platformKey);
       const res = await platform.getMe();
       if (res.data && res.status === 200) {
-        await platformAccountApi.addAccount(data.token);
-        snackbar.setMessage('Thêm tài khoản thành công', 'success');
+        const resAddAccount = await platformAccountApi.addAccount({
+          accountName: res.data?.data?.username,
+          token: data.token,
+          type: platformKey,
+        });
+        if (resAddAccount.status === 200) {
+          snackbar.setMessage('Thêm tài khoản thành công', 'success');
+          fetchAccounts();
+        } else {
+          throw new Error(res.data);
+        }
       }
     } catch (error: any) {
       if (error?.response?.status === 401) {
@@ -59,41 +69,21 @@ const AccountList = ({navigation, route}: Props) => {
       );
     }
   };
-  const platformList: PlatformType[] = [
-    {
-      name: 'Golike',
-      key: 'golike',
-      icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
-    },
-    {
-      name: 'Trao đổi sub',
-      key: 'tds',
-      icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
-    },
-    {
-      name: 'Tương tác chéo',
-      key: 'ttc',
-      icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
-    },
-  ];
+  const fetchAccounts = async () => {
+    try {
+      const res = await platformAccountApi.getAccounts(platformKey);
+      setAccounts(res.data);
+    } catch (error: any) {
+      snackbar.setMessage(
+        typeof error === 'string'
+          ? error
+          : error?.message ||
+              'Lấy danh sách tài khoản thất bại. Vui lòng kiểm tra lại.',
+        'error',
+      );
+    }
+  };
   useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await platformAccountApi.getAccounts(platformKey);
-        setAccounts(res.data);
-      } catch (error: any) {
-        snackbar.setMessage(
-          typeof error === 'string'
-            ? error
-            : error?.message ||
-                'Lấy danh sách tài khoản thất bại. Vui lòng kiểm tra lại.',
-          'error',
-        );
-      }
-    };
     fetchAccounts();
   }, [platformKey]);
   return (
@@ -111,36 +101,12 @@ const AccountList = ({navigation, route}: Props) => {
         <List.Section>
           {accounts.map(account => {
             return (
-              <List.Item
-                key={account}
-                title={<Typo>{account.name}</Typo>}
-                style={{
-                  paddingHorizontal: 10,
-                  borderTopWidth: 1,
-                  borderTopColor: COLOR.tertiary,
-                }}
-                left={() => (
-                  <View
-                    style={{
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderRadius: 15,
-                    }}>
-                    <View
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        width: 38,
-                        height: 38,
-                        borderRadius: 15,
-                        backgroundColor: COLOR.primary,
-                      }}></View>
-                  </View>
-                )}
-                right={() => (
-                  <List.Icon icon="trash-can-outline" color={'black'} />
-                )}
+              <AccountItem
+                account_name={account.account_name}
+                token={account.token}
+                id={account.id}
+                type={platformKey}
+                key={account.id}
               />
             );
           })}

@@ -5,11 +5,11 @@ const {OverlayModule} = NativeModules;
 const overlayEmitter = new NativeEventEmitter(OverlayModule);
 
 function setupListeners() {
-  overlayEmitter.addListener('onStartEvent', async () => {
+  overlayEmitter?.addListener('onStartEvent', async () => {
     clickOnOtherApp();
   });
 
-  overlayEmitter.addListener('onStopEvent', () => {
+  overlayEmitter?.addListener('onStopEvent', () => {
     stopAutoCollect();
   });
 }
