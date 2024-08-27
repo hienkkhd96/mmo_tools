@@ -1,6 +1,7 @@
 package com.mmo_tools.accessibility
 
 import CompleteJobPayload
+import SkipJobPayload
 import TiktokJobResponse
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
@@ -12,12 +13,16 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.WindowMetrics
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.TextView
 import com.google.gson.Gson
+import com.mmo_tools.R
 import golikeService
 import kotlinx.coroutines.*
 import retrofit2.Call
@@ -40,7 +45,7 @@ class MyAccessibilityService : AccessibilityService() {
     public var rowSize: Int = 0
     public var columnSize: Int = 0
     public val positionFollow: Pair<Int, Int> = Pair(31, 38)
-    public val positionLike: Pair<Int, Int> = Pair(100, 66)
+    public val positionLike: Pair<Int, Int> = Pair(100, 6)
 
     companion object {
         private var accessibilityService: MyAccessibilityService? = null
@@ -58,8 +63,11 @@ class MyAccessibilityService : AccessibilityService() {
                         val gson = Gson()
                         val appForm = gson.fromJson(data, FormField::class.java)
                         appData = appForm
+                        showCustomToast("Bắt đầu chạy app")
                         handleAutoCollect()
                     } else if (intent.action == "com.mmo_tools.accessibility.STOP_AUTO_COLLECT") {
+                        showCustomToast("App đang dừng")
+
                         isStoped = true
                     }
                 }
@@ -80,6 +88,39 @@ class MyAccessibilityService : AccessibilityService() {
         val (screenWidth, screenHeight) = getScreenSize()
         rowSize = screenWidth / 100
         columnSize = screenHeight / 100
+    }
+    fun showCustomToast(message: String) {
+        // Inflate custom toast layout
+        val inflater = LayoutInflater.from(this)
+        val toastView = inflater.inflate(R.layout.custom_toast_layout, null)
+
+        // Set the message on the toast
+        val textView = toastView.findViewById<TextView>(R.id.toast_message)
+        textView.text = message
+
+        // Create and configure the WindowManager parameters
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val params =
+                WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams
+                                .TYPE_APPLICATION_OVERLAY, // TYPE_APPLICATION_OVERLAY for API 26+
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FORMAT_CHANGED
+                )
+        params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
+        params.y = 100 // Offset from top
+
+        // Add the toast view to the WindowManager
+        windowManager.addView(toastView, params)
+
+        // Automatically remove the toast after a certain delay
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(2000) // 2 seconds delay
+            windowManager.removeView(toastView)
+        }
     }
 
     override fun onDestroy() {
@@ -127,24 +168,33 @@ class MyAccessibilityService : AccessibilityService() {
                                 return
                             }
                             if (type == "like") {
+                                showCustomToast("Đang thực hiện job like")
                                 openSchemaUrl(url = "tiktok://aweme/detail/$objectId")
                                 delay(2000)
                                 val (x, y) = positionLike
                                 autoClick(x * rowSize, y * columnSize)
                             } else if (type == "follow") {
+                                showCustomToast("Đang thực hiện job follow")
                                 openSchemaUrl(url = "tiktok://profile?id=$objectId")
                                 delay(2000)
                                 val (x, y) = positionFollow
                                 autoClick(x * rowSize, y * columnSize)
+                            } else {
+                                showCustomToast("Skip job comment")
+
+                                skipJob(account_id, job_id.toString(), objectId, type)
+                                if (!isStoped) {
+                                    delay(8000)
+                                    return handleAutoCollect()
+                                }
                             }
                             delay(2000)
-                            completeJob(account_id, job_id.toString())
-                            delay(10000)
+                            completeJob(account_id, job_id.toString(), objectId, type, 1)
                             if (!isStoped) {
-                                handleAutoCollect()
+                                delay(8000)
+                                return handleAutoCollect()
                             }
                         } else {
-
                             println("Request failed with status: ${response.code()}")
                         }
                     }
@@ -246,9 +296,18 @@ class MyAccessibilityService : AccessibilityService() {
         return Pair(centerX, centerY)
     }
 
-    public fun completeJob(account_id: String, job_id: String) {
-        if (appData == null) {
+    public fun completeJob(
+            account_id: String,
+            job_id: String,
+            object_id: String,
+            type: String,
+            count: Int
+    ) {
+        if (appData == null || isStoped) {
             return
+        }
+        if (count > 5) {
+            return skipJob(account_id, job_id, object_id, type)
         }
         val dataCollector = appData
         val call =
@@ -267,8 +326,45 @@ class MyAccessibilityService : AccessibilityService() {
                     override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {
                             println("Job completed successfully")
+                            return
                         } else {
-                            println("Request failed with status: ${response.message()}")
+                            println("Request failed with status: ${response.code()}")
+                            delay(2000)
+                            return completeJob(account_id, job_id, object_id, type, count.plus(1))
+                        }
+                    }
+                    override fun onFailure(call: Call<Any>, t: Throwable) {
+                        println("Error: ${t.message}")
+                        delay(2000)
+                        return completeJob(account_id, job_id, object_id, type, count.plus(1))
+                    }
+                }
+        )
+    }
+    public fun skipJob(account_id: String, job_id: String, object_id: String, type: String) {
+        if (appData == null || isStoped) {
+            return
+        }
+        val dataCollector = appData
+        val call =
+                golikeService.skipJob(
+                        SkipJobPayload(
+                                ads_id = job_id,
+                                account_id = account_id,
+                                object_id = object_id,
+                                type = type,
+                        ),
+                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                )
+
+        call.enqueue(
+                object : Callback<Any> {
+                    override fun onResponse(call: Call<Any>, response: Response<Any>) {
+                        if (response.isSuccessful) {
+                            println("Skip job successfully")
+                            return
+                        } else {
+                            println("Request failed with status: ${response.code()}")
                         }
                     }
                     override fun onFailure(call: Call<Any>, t: Throwable) {

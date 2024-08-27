@@ -18,6 +18,8 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
     private val windowManager: WindowManager by lazy {
         reactContext.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
+    private var toggleButton: Button? = null
+    private var isStarted = false
 
     override fun getName(): String {
         return "OverlayModule"
@@ -48,37 +50,23 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
                     setPadding(16, 16, 16, 16)
                 }
 
-        val buttonLayout =
-                LinearLayout(context).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.TOP
-                    layoutParams =
-                            LinearLayout.LayoutParams(
-                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                    LinearLayout.LayoutParams.WRAP_CONTENT
-                            )
-                }
-
-        val startButton =
+        toggleButton =
                 Button(context).apply {
                     this.text = "Start"
-                    this.setOnClickListener { sendEvent("onStartEvent", null) }
-                }
-
-        val stopButton =
-                Button(context).apply {
-                    this.text = "Stop"
                     this.setOnClickListener {
-                        sendEvent("onStopEvent", null)
-                        stopOverlay()
+                        if (isStarted) {
+                            this.text = "Start"
+                            sendEvent("onStopEvent", null)
+                            isStarted = false
+                        } else {
+                            this.text = "Stop"
+                            sendEvent("onStartEvent", null)
+                            isStarted = true
+                        }
                     }
                 }
 
-        buttonLayout.addView(startButton)
-        buttonLayout.addView(stopButton)
-
-        overlayLayout?.addView(buttonLayout)
-
+        overlayLayout?.addView(toggleButton)
         windowManager.addView(overlayLayout, params)
     }
 
