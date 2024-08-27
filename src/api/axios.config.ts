@@ -11,7 +11,6 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   async function (config) {
     const accessToken = await AsyncStorage.getItem('access_token');
-    console.log(accessToken);
 
     // Do something before request is sent
     if (accessToken) {

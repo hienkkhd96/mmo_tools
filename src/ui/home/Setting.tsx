@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,18 +11,25 @@ import {
 import {Dropdown} from 'react-native-element-dropdown';
 import {Button, List, RadioButton, TextInput} from 'react-native-paper';
 import FaIcon from 'react-native-vector-icons/FontAwesome5';
-import Overlay from '../../../src/modules/Overlay';
+import OverlayModule from '../../../src/modules/Overlay';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
-import {openOtherApp} from '../../utils/openAnotherApp';
 import {useAppStore} from '../../store/app.store';
+import {useDialogStore} from '../../store/dialog.store';
+import {
+  checkAppInstalled,
+  openOtherApp,
+  openPlayStore,
+} from '../../utils/openAnotherApp';
+import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import {sendDataToAccess} from '../../modules/Access';
+import {useFetchAccount, useFetchSubAccount} from '../hooks';
 
 type Props = {};
 type FormField = {
-  platform: string;
+  platform: PLATFORM_TYPE;
   platformAccount: string;
-  channel: string;
+  channel: CHANEL_TYPE;
   workAccount: string;
   stopBeforeSuccess: number;
   stopBeforeError: number;
@@ -29,25 +37,60 @@ type FormField = {
 };
 const SettingScreen = (props: Props) => {
   const token = useAppStore(state => state.token);
+  const channelLinkSchema: Record<CHANEL_TYPE, string> = {
+    tiktok: 'tiktok://profile?id=7348173',
+  };
   const [formData, setFormData] = useState<FormField>({
-    platform: 'golike',
+    platform: PLATFORM_TYPE.GOLIKE,
     platformAccount:
-      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ1NjA0NzMsImV4cCI6MTc1NjA5NjQ3MywibmJmIjoxNzI0NTYwNDczLCJqdGkiOiJocTluOHFFMUxWNTNKZ1JRIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.jfgavMipl4AqyJxsr0GttSd7wFlexDiA7spmMQEUKv4',
-    channel: 'tiktok',
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ2MTA4MjksImV4cCI6MTc1NjE0NjgyOSwibmJmIjoxNzI0NjEwODI5LCJqdGkiOiJhWm8yZXpjd21oOElRQVIxIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.ccmeangRab_CQiftK2Kpt5lcd6TlbxIDn0tgoPIetT4',
+    channel: CHANEL_TYPE.TIKTOK,
     workAccount: '803733',
     stopBeforeSuccess: 9999,
     stopBeforeError: 9999,
     timeDelay: 5,
   });
-  const [accounts, setAccounts] = useState([
-    {
-      token:
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ1NjA0NzMsImV4cCI6MTc1NjA5NjQ3MywibmJmIjoxNzI0NTYwNDczLCJqdGkiOiJocTluOHFFMUxWNTNKZ1JRIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.jfgavMipl4AqyJxsr0GttSd7wFlexDiA7spmMQEUKv4',
-      type: 'golike',
-      account_name: 'test',
-    },
-  ]);
+  const {accounts} = useFetchAccount({
+    platform: formData.platform,
+  });
+  const {subAccounts} = useFetchSubAccount({
+    token: formData.platformAccount,
+    chanel: formData.channel,
+  });
 
+  const dialog = useDialogStore();
+
+  const handleOpenApp = async () => {
+    const isOverlayOn = await OverlayModule.checkOverlayPermission();
+    const isInstalled = await checkAppInstalled(
+      channelLinkSchema?.[formData.channel],
+    );
+
+    const isOnAccessibility =
+      await OverlayModule.isAccessibilityServiceEnabled();
+
+    if (!isOverlayOn) {
+      dialog.setShowDialog(
+        'Bạn chua bật tính năng hiển thị lớp phủ. Nhấn Ok để mở cài đặt ứng dụng',
+        {
+          action: () => Linking.openSettings(),
+        },
+      );
+    } else if (!isOnAccessibility) {
+      dialog.setShowDialog(
+        'Bạn chua bật tính năng hỗ trợ cử chỉ. Nhấn Ok để mở cài đặt ứng dụng',
+        {
+          action: () => OverlayModule.openAccessibilitySettings(),
+        },
+      );
+    } else if (isInstalled) {
+      openPlayStore('market://details?id=tiktok');
+    } else {
+      sendDataToAccess(formData);
+      OverlayModule.startOverlay();
+      openOtherApp(channelLinkSchema?.[formData.channel]);
+    }
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -225,12 +268,10 @@ const SettingScreen = (props: Props) => {
               borderRadius: 4,
             }}
             value={formData.workAccount}
-            data={[
-              {
-                value: '803733',
-                label: 'supperhien5',
-              },
-            ]}
+            data={subAccounts.map(subAccount => ({
+              label: subAccount.nickname,
+              value: subAccount.user_id,
+            }))}
             labelField={'label'}
             valueField="value"
             onChange={value => {
@@ -301,11 +342,7 @@ const SettingScreen = (props: Props) => {
           </List.Accordion>
           <Button
             mode="contained"
-            onPress={() => {
-              sendDataToAccess(formData);
-              Overlay.startOverlay();
-              openOtherApp('tiktok://');
-            }}
+            onPress={handleOpenApp}
             style={{
               borderRadius: 8,
               paddingVertical: 6,

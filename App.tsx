@@ -10,6 +10,7 @@ import SnackBarGlobal from './src/components/snackbar';
 import {View} from 'react-native';
 import LoginByKey from './src/ui/login/LoginByKey';
 import {useAppStore} from './src/store/app.store';
+import GlobalDialog from './src/components/dialog';
 
 function App(): React.JSX.Element {
   const Stack = createNativeStackNavigator();
@@ -49,6 +50,7 @@ function App(): React.JSX.Element {
           )}
         </Stack.Navigator>
       </NavigationContainer>
+      <GlobalDialog />
       <View style={{position: 'absolute', top: 120, left: 0, right: 0}}>
         <SnackBarGlobal />
       </View>

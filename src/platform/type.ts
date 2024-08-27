@@ -3,3 +3,6 @@ export enum PLATFORM_TYPE {
   TDS = 'tds',
   TTC = 'ttc',
 }
+export enum CHANEL_TYPE {
+  TIKTOK = 'tiktok',
+}

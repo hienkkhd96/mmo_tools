@@ -1,9 +1,6 @@
 import axios from 'axios';
 const golikeClient = axios.create({
   baseURL: 'https://gateway.golike.net/api/',
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 golikeClient.interceptors.request.use(

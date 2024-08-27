@@ -28,8 +28,7 @@ const Login = ({navigation}: Props) => {
   });
   const onSubmit = async (data: FieldValues) => {
     try {
-      const res = await authApi.login(data.username, data.password);
-      console.log(res);
+      await authApi.login(data.username, data.password);
     } catch (error: any) {
       console.log(error?.response.data);
     }

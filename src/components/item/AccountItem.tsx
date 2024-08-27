@@ -4,13 +4,8 @@ import {List} from 'react-native-paper';
 import {PLATFORM_TYPE} from '../../platform/type';
 import Typo from '../text';
 import {COLOR} from '../../constant';
+import {Account} from '../../ui/hooks/useFetchAccounts';
 
-export type Account = {
-  account_name: string;
-  token: string;
-  type: PLATFORM_TYPE;
-  id: string;
-};
 const AccountItem = (account: Account) => {
   return (
     <List.Item
