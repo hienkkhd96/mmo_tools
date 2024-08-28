@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.graphics.Path
 import android.graphics.PixelFormat
 import android.graphics.Point
@@ -18,6 +19,7 @@ import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -60,6 +62,11 @@ class MyAccessibilityService : AccessibilityService() {
     public var failedJob: Int = 0
     private var currentToastView: View? = null
     private val jobScope = CoroutineScope(Dispatchers.Main + Job())
+    private lateinit var floatingView: View
+    private lateinit var windowManager: WindowManager
+    private lateinit var sharedPreferences: SharedPreferences
+    private var likePositionX: Int = 100
+    private var likePositionY: Int = 100
     companion object {
         private var accessibilityService: MyAccessibilityService? = null
 
@@ -76,11 +83,17 @@ class MyAccessibilityService : AccessibilityService() {
                         val gson = Gson()
                         val appForm = gson.fromJson(data, FormField::class.java)
                         appData = appForm
+                        successJob = 0
+                        failedJob = 0
                         showCustomToast("App đang chạy", autoClose = false)
                         handleAutoCollect()
                     } else if (intent.action == "com.mmo_tools.accessibility.STOP_AUTO_COLLECT") {
                         showCustomToast("App đang dừng", autoClose = true)
                         isStoped = true
+                    } else if (intent.action == "com.mmo_tools.showLikePosition") {
+                        showFloatingCircle()
+                    } else if (intent.action == "com.mmo_tools.hideLikePosition") {
+                        hideFloatingCircle()
                     }
                 }
             }
@@ -104,9 +117,26 @@ class MyAccessibilityService : AccessibilityService() {
                 IntentFilter("com.mmo_tools.accessibility.STOP_AUTO_COLLECT"),
                 Context.RECEIVER_EXPORTED
         )
+        registerReceiver(
+                receiver,
+                IntentFilter("com.mmo_tools.showLikePosition"),
+                Context.RECEIVER_EXPORTED
+        )
+        registerReceiver(
+                receiver,
+                IntentFilter("com.mmo_tools.hideLikePosition"),
+                Context.RECEIVER_EXPORTED
+        )
         val (screenWidth, screenHeight) = getScreenSize()
         rowSize = screenWidth / 100
         columnSize = screenHeight / 100
+        sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
+        if (::sharedPreferences.isInitialized) {
+            likePositionX = sharedPreferences.getInt("likePosition_x", 100)
+            likePositionY = sharedPreferences.getInt("likePosition_y", 100)
+        } else {
+            Log.e("MyAccessibilityService", "sharedPreferences not initialized")
+        }
     }
     override fun onDestroy() {
         jobScope.cancel()
@@ -115,11 +145,10 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     fun showCustomToast(message: String, autoClose: Boolean) {
-        if (isStoped) return
         // Inflate custom toast layout
         val inflater = LayoutInflater.from(this)
         val toastView = inflater.inflate(R.layout.custom_toast_layout, null)
-
+        toastView.keepScreenOn = true
         // Set the message on the toast
         val textView = toastView.findViewById<TextView>(R.id.toast_message)
         val successView = toastView.findViewById<TextView>(R.id.success_job)
@@ -148,15 +177,13 @@ class MyAccessibilityService : AccessibilityService() {
                 WindowManager.LayoutParams(
                         WindowManager.LayoutParams.WRAP_CONTENT,
                         WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams
-                                .TYPE_APPLICATION_OVERLAY, // TYPE_APPLICATION_OVERLAY for API 26+
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                        PixelFormat.TRANSLUCENT // Sử dụng PixelFormat.TRANSLUCENT để hiển thị chính
-                        // xác
-                        )
+                        PixelFormat.TRANSLUCENT
+                )
         params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
-        params.y = 100 // Offset from top
+        params.y = 100
 
         // Thêm view mới vào WindowManager
         windowManager.addView(toastView, params)
@@ -182,11 +209,11 @@ class MyAccessibilityService : AccessibilityService() {
         val stopAfterError = dataCollector.stopAfterError
         val stopAfterSuccess = dataCollector.stopAfterSuccess
         if (successJob >= stopAfterSuccess || failedJob >= stopAfterError) {
-            showCustomToast("Đã hoàn tất lịch trình", autoClose = true)
+            showCustomToast("Đã hoàn tất lịch trình", autoClose = false)
+            isStoped = true
             return
         }
 
-        println("Account ID: $account_id")
         val call =
                 golikeService.getJobs(
                         null,
@@ -214,10 +241,9 @@ class MyAccessibilityService : AccessibilityService() {
                                 showCustomToast("Đang thực hiện job like", autoClose = false)
                                 openSchemaUrl(url = "tiktok://aweme/detail/$objectId")
                                 jobScope.launch {
-                                    delay(2000)
+                                    delay(3000)
                                     if (!isStoped) {
-                                        val (x, y) = positionLike
-                                        autoClick(x * rowSize, y * columnSize)
+                                        autoClick(likePositionX, likePositionX)
                                         completeJob(
                                                 account_id,
                                                 job_id.toString(),
@@ -248,7 +274,7 @@ class MyAccessibilityService : AccessibilityService() {
                                 showCustomToast("Đang thực hiện job follow", autoClose = false)
                                 openSchemaUrl(url = "tiktok://profile?id=$objectId")
                                 jobScope.launch {
-                                    delay(2000)
+                                    delay(3000)
                                     if (!isStoped) {
                                         performClickOnTarget("Follow", type = "byText")
                                         completeJob(
@@ -285,7 +311,7 @@ class MyAccessibilityService : AccessibilityService() {
                                             override fun onSuccess() {
                                                 if (!isStoped) {
                                                     jobScope.launch {
-                                                        delay(8000)
+                                                        delay(3000)
                                                         handleAutoCollect()
                                                     }
                                                 }
@@ -551,5 +577,53 @@ class MyAccessibilityService : AccessibilityService() {
     }
     fun getCellIndex(position: Int, cellSize: Int): Int {
         return position / cellSize
+    }
+    fun showFloatingCircle() {
+        if (!::floatingView.isInitialized) {
+            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            floatingView = inflater.inflate(R.layout.floating_circle, null)
+
+            val params =
+                    WindowManager.LayoutParams(
+                                    WindowManager.LayoutParams.WRAP_CONTENT,
+                                    WindowManager.LayoutParams.WRAP_CONTENT,
+                                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                                    PixelFormat.TRANSLUCENT
+                            )
+                            .apply {
+                                gravity = Gravity.TOP or Gravity.LEFT
+                                x = likePositionX
+                                y = likePositionY
+                            }
+            windowManager.addView(floatingView, params)
+
+            floatingView.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_MOVE -> {
+                        params.x = (event.rawX - floatingView.width / 2).toInt()
+                        params.y = (event.rawY - floatingView.height / 2).toInt()
+                        windowManager.updateViewLayout(floatingView, params)
+                        with(sharedPreferences.edit()) {
+                            putInt("likePosition_x", params.x)
+                            putInt("likePosition_y", params.y)
+                            apply()
+                        }
+                    }
+                }
+                true
+            }
+        }
+        floatingView.visibility = View.VISIBLE
+    }
+
+    fun hideFloatingCircle() {
+        if (::floatingView.isInitialized) {
+            floatingView.visibility = View.GONE
+        }
     }
 }

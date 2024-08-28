@@ -11,7 +11,6 @@ import {View} from 'react-native';
 import LoginByKey from './src/ui/login/LoginByKey';
 import {useAppStore} from './src/store/app.store';
 import GlobalDialog from './src/components/dialog';
-
 function App(): React.JSX.Element {
   const Stack = createNativeStackNavigator();
   const [isLoading, setIsLoading] = useState(false);

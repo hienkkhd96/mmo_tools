@@ -2715,6 +2715,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sayem314/react-native-keep-awake@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "@sayem314/react-native-keep-awake@npm:1.2.4"
+  checksum: 0d049a61b224d1693514e85154ff291e59a3f4613dfd83d8e2a981f764a07ba1f9e621c060643558823bf10968f4f9625ab5d850fccd02ae753692ba57fd7219
+  languageName: node
+  linkType: hard
+
 "@sideway/address@npm:^4.1.5":
   version: 4.1.5
   resolution: "@sideway/address@npm:4.1.5"
@@ -7561,6 +7568,7 @@ __metadata:
     "@react-navigation/native-stack": ^6.11.0
     "@rneui/base": ^4.0.0-rc.8
     "@rneui/themed": ^4.0.0-rc.8
+    "@sayem314/react-native-keep-awake": ^1.2.4
     "@types/react": ^18.2.6
     "@types/react-native-vector-icons": ^6.4.18
     "@types/react-test-renderer": ^18.0.0

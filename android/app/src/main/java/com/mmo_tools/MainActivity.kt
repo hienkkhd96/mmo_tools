@@ -1,6 +1,7 @@
 package com.mmo_tools
 
 import android.os.Bundle
+import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -22,5 +23,6 @@ class MainActivity : ReactActivity() {
           DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(null)
+    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
   }
 }

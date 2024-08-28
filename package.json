@@ -16,6 +16,7 @@
     "@react-navigation/native-stack": "^6.11.0",
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
+    "@sayem314/react-native-keep-awake": "^1.2.4",
     "axios": "^1.7.5",
     "metro-react-native-babel-preset": "^0.77.0",
     "react": "18.3.1",

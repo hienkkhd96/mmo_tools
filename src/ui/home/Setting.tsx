@@ -36,15 +36,13 @@ type Props = {};
 const SettingScreen = (props: Props) => {
   const token = useAppStore(state => state.token);
   const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
-    tiktok: 'tiktok://profile?id=7348173',
+    tiktok: 'tiktok://',
   };
   const {
     initConfig: formData,
     saveConfig,
     alterConfig: setFormData,
   } = useFetchInitConfig();
-
-  console.log(formData, 'formData');
 
   const {accounts} = useFetchAccount({
     platform: formData.platform,
@@ -69,12 +67,31 @@ const SettingScreen = (props: Props) => {
       chanelLinkSchema?.[formData.chanel],
     );
 
-    saveConfig(formData);
-    console.log(formData, 'formData');
+    const isOnAccessibility =
+      await OverlayModule.isAccessibilityServiceEnabled();
 
-    sendDataToAccess(formData);
-    OverlayModule.startOverlay();
-    openOtherApp(chanelLinkSchema?.[formData.chanel]);
+    if (!isOverlayOn) {
+      dialog.setShowDialog(
+        'Bạn chua bật tính năng hiển thị trên ứng dụng khác. Nhấn Ok để mở cài đặt ứng dụng',
+        {
+          action: () => Linking.openSettings(),
+        },
+      );
+    } else if (!isOnAccessibility) {
+      dialog.setShowDialog(
+        'Bạn chua bật tính năng hỗ trợ cử chỉ. Nhấn Ok để mở cài đặt ứng dụng',
+        {
+          action: () => OverlayModule.openAccessibilitySettings(),
+        },
+      );
+    } else if (!isInstalled) {
+      openPlayStore('market://details?id=tiktok');
+    } else {
+      saveConfig(formData);
+      sendDataToAccess(formData);
+      OverlayModule.startOverlay();
+      openOtherApp(chanelLinkSchema?.[formData.chanel]);
+    }
   };
   return (
     <KeyboardAvoidingView
