@@ -69,28 +69,12 @@ const SettingScreen = (props: Props) => {
       chanelLinkSchema?.[formData.chanel],
     );
 
-    const isOnAccessibility =
-      await OverlayModule.isAccessibilityServiceEnabled();
+    saveConfig(formData);
+    console.log(formData, 'formData');
 
-    if (!isOverlayOn) {
-      requestOverlayPermission();
-    } else if (!isOnAccessibility) {
-      dialog.setShowDialog(
-        'Bạn chua bật tính năng hỗ trợ cử chỉ. Nhấn Ok để mở cài đặt ứng dụng',
-        {
-          action: () => OverlayModule.openAccessibilitySettings(),
-        },
-      );
-    } else if (isInstalled) {
-      openPlayStore('market://details?id=tiktok');
-    } else {
-      saveConfig(formData);
-      console.log(formData, 'formData');
-
-      sendDataToAccess(formData);
-      OverlayModule.startOverlay();
-      openOtherApp(chanelLinkSchema?.[formData.chanel]);
-    }
+    sendDataToAccess(formData);
+    OverlayModule.startOverlay();
+    openOtherApp(chanelLinkSchema?.[formData.chanel]);
   };
   return (
     <KeyboardAvoidingView

@@ -29,7 +29,7 @@
       android:name=".accessibility.MyAccessibilityService"
       android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
       android:exported="true"
-      android:label="Bật/Tắt trợ lý"
+      android:label="MMO_TOOLS"
     >
       <intent-filter>
         <action android:name="android.accessibilityservice.AccessibilityService" />

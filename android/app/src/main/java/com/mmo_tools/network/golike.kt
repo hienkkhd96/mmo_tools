@@ -33,8 +33,8 @@ data class TiktokJob(
 )
 
 data class CompleteJobPayload(
-        val ads_id: String,
-        val account_id: String,
+        val ads_id: Int,
+        val account_id: Int,
         val async: Boolean,
         val data: String?,
 )
@@ -60,6 +60,7 @@ interface GolikeServie {
         fun completeJob(
                 @Body requestBody: CompleteJobPayload,
                 @Header("Authorization") authHeader: String?,
+                @Header("t") t: String? = "VFZSamVVNUVZekpPVkVGNlRuYzlQUT09",
         ): Call<Any>
 
         @POST("advertising/publishers/tiktok/skip-jobs")

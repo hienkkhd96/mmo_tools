@@ -11,8 +11,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Path
 import android.graphics.PixelFormat
+import android.graphics.Point
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -108,11 +110,6 @@ class MyAccessibilityService : AccessibilityService() {
     }
     override fun onDestroy() {
         jobScope.cancel()
-
-        currentToastView?.let {
-            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-            windowManager.removeView(it)
-        }
         unregisterReceiver(receiver)
         super.onDestroy()
     }
@@ -422,11 +419,12 @@ class MyAccessibilityService : AccessibilityService() {
         }
 
         val dataCollector = appData
+        println("job_id: $job_id account_id:")
         val call =
                 golikeService.completeJob(
                         CompleteJobPayload(
-                                ads_id = job_id,
-                                account_id = account_id,
+                                ads_id = job_id.toInt(),
+                                account_id = account_id.toInt(),
                                 async = true,
                                 data = null
                         ),
@@ -441,7 +439,7 @@ class MyAccessibilityService : AccessibilityService() {
                             successJob += 1
                             callback.onSuccess() // Gọi onSuccess khi hoàn thành
                         } else {
-                            println("Request failed with status: ${response.body()}")
+                            println("Request failed with status: ${response}")
                             jobScope.launch {
                                 delay(2000)
                                 if (!isStoped) {
@@ -526,16 +524,30 @@ class MyAccessibilityService : AccessibilityService() {
     }
     fun getScreenSize(): Pair<Int, Int> {
         val wm = this.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val windowMetrics: WindowMetrics = wm.currentWindowMetrics
-        val insets =
-                windowMetrics.windowInsets.getInsetsIgnoringVisibility(
-                        WindowInsets.Type.systemBars()
-                )
 
-        val width = windowMetrics.bounds.width() - insets.left - insets.right
-        val height = windowMetrics.bounds.height() - insets.top - insets.bottom
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // For Android 11 (API level 30) and above
+            val windowMetrics: WindowMetrics = wm.currentWindowMetrics
+            val insets =
+                    windowMetrics.windowInsets.getInsetsIgnoringVisibility(
+                            WindowInsets.Type.systemBars()
+                    )
 
-        return Pair(width, height)
+            val width = windowMetrics.bounds.width() - insets.left - insets.right
+            val height = windowMetrics.bounds.height() - insets.top - insets.bottom
+
+            Pair(width, height)
+        } else {
+            // For Android 10 (API level 29) and below
+            val display = wm.defaultDisplay
+            val size = Point()
+            display.getSize(size)
+
+            val width = size.x
+            val height = size.y
+
+            Pair(width, height)
+        }
     }
     fun getCellIndex(position: Int, cellSize: Int): Int {
         return position / cellSize

@@ -1,6 +1,5 @@
 package com.mmo_tools.overlay
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -8,7 +7,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.LinearLayout
 import com.facebook.react.bridge.Promise
@@ -102,27 +100,6 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit(eventName, params)
-    }
-
-    @ReactMethod
-    fun isAccessibilityServiceEnabled(promise: Promise) {
-        try {
-            val accessibilityManager =
-                    reactApplicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as
-                            AccessibilityManager
-            val enabledServices =
-                    accessibilityManager.getEnabledAccessibilityServiceList(
-                            AccessibilityServiceInfo.FEEDBACK_ALL_MASK
-                    )
-
-            val packageName = reactApplicationContext.packageName
-            val isServiceEnabled =
-                    enabledServices.any { it.resolveInfo.serviceInfo.packageName == packageName }
-
-            promise.resolve(isServiceEnabled)
-        } catch (e: Exception) {
-            promise.reject("ERROR_ACCESSIBILITY_CHECK", "Error checking accessibility service", e)
-        }
     }
 
     @ReactMethod
