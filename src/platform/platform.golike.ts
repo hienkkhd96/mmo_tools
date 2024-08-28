@@ -10,5 +10,7 @@ export class Golike extends Platform {
     const res = golikeApi.getProfile(this.token);
     return res;
   }
-  getSubAccounts(chanel: CHANEL_TYPE) {}
+  getSubAccounts(chanel: CHANEL_TYPE) {
+    return golikeApi.getSubAccounts({token: this.token, chanel});
+  }
 }

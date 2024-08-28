@@ -16,7 +16,8 @@ import {COLOR} from '../../../constant';
 import {PlatformFactory} from '../../../platform/platform.factory';
 import {useSnackbarStore} from '../../../store/snackbar.store';
 import {PlatformType} from './PlatformList';
-import AccountItem, {Account} from '../../../components/item/AccountItem';
+import AccountItem from '../../../components/item/AccountItem';
+import {Account} from '../../hooks';
 
 type Props = {
   navigation: any;
@@ -43,13 +44,16 @@ const AccountList = ({navigation, route}: Props) => {
     try {
       const platform = PlatformFactory.createPlatform(data.token, platformKey);
       const res = await platform.getMe();
+
       if (res.data && res.status === 200) {
         const resAddAccount = await platformAccountApi.addAccount({
           accountName: res.data?.data?.username,
           token: data.token,
           type: platformKey,
         });
-        if (resAddAccount.status === 200) {
+        console.log(resAddAccount);
+
+        if (resAddAccount.status === 200 || resAddAccount.status === 201) {
           snackbar.setMessage('Thêm tài khoản thành công', 'success');
           fetchAccounts();
         } else {

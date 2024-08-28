@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   KeyboardAvoidingView,
   Linking,
@@ -20,62 +20,60 @@ import {
   checkAppInstalled,
   openOtherApp,
   openPlayStore,
+  requestOverlayPermission,
 } from '../../utils/openAnotherApp';
 import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import {sendDataToAccess} from '../../modules/Access';
-import {useFetchAccount, useFetchSubAccount} from '../hooks';
+import {
+  CONFIG_TYPE,
+  useFetchAccount,
+  useFetchInitConfig,
+  useFetchSubAccount,
+} from '../hooks';
 
 type Props = {};
-type FormField = {
-  platform: PLATFORM_TYPE;
-  platformAccount: string;
-  channel: CHANEL_TYPE;
-  workAccount: string;
-  stopBeforeSuccess: number;
-  stopBeforeError: number;
-  timeDelay: number;
-};
+
 const SettingScreen = (props: Props) => {
   const token = useAppStore(state => state.token);
-  const channelLinkSchema: Record<CHANEL_TYPE, string> = {
+  const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
     tiktok: 'tiktok://profile?id=7348173',
   };
-  const [formData, setFormData] = useState<FormField>({
-    platform: PLATFORM_TYPE.GOLIKE,
-    platformAccount:
-      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9nYXRld2F5LmdvbGlrZS5uZXRcL2FwaVwvbG9naW4iLCJpYXQiOjE3MjQ2MTA4MjksImV4cCI6MTc1NjE0NjgyOSwibmJmIjoxNzI0NjEwODI5LCJqdGkiOiJhWm8yZXpjd21oOElRQVIxIiwic3ViIjoyNDY4NjEsInBydiI6ImI5MTI3OTk3OGYxMWFhN2JjNTY3MDQ4N2ZmZjAxZTIyODI1M2ZlNDgifQ.ccmeangRab_CQiftK2Kpt5lcd6TlbxIDn0tgoPIetT4',
-    channel: CHANEL_TYPE.TIKTOK,
-    workAccount: '803733',
-    stopBeforeSuccess: 9999,
-    stopBeforeError: 9999,
-    timeDelay: 5,
-  });
+  const {
+    initConfig: formData,
+    saveConfig,
+    alterConfig: setFormData,
+  } = useFetchInitConfig();
+
+  console.log(formData, 'formData');
+
   const {accounts} = useFetchAccount({
     platform: formData.platform,
   });
+
   const {subAccounts} = useFetchSubAccount({
     token: formData.platformAccount,
-    chanel: formData.channel,
+    chanel: formData.chanel,
+    platform: formData.platform,
   });
 
   const dialog = useDialogStore();
-
+  const handleChangeFormData = (key: keyof CONFIG_TYPE, value: any) => {
+    setFormData({
+      key: key,
+      value: value,
+    });
+  };
   const handleOpenApp = async () => {
     const isOverlayOn = await OverlayModule.checkOverlayPermission();
     const isInstalled = await checkAppInstalled(
-      channelLinkSchema?.[formData.channel],
+      chanelLinkSchema?.[formData.chanel],
     );
 
     const isOnAccessibility =
       await OverlayModule.isAccessibilityServiceEnabled();
 
     if (!isOverlayOn) {
-      dialog.setShowDialog(
-        'Bạn chua bật tính năng hiển thị lớp phủ. Nhấn Ok để mở cài đặt ứng dụng',
-        {
-          action: () => Linking.openSettings(),
-        },
-      );
+      requestOverlayPermission();
     } else if (!isOnAccessibility) {
       dialog.setShowDialog(
         'Bạn chua bật tính năng hỗ trợ cử chỉ. Nhấn Ok để mở cài đặt ứng dụng',
@@ -86,9 +84,12 @@ const SettingScreen = (props: Props) => {
     } else if (isInstalled) {
       openPlayStore('market://details?id=tiktok');
     } else {
+      saveConfig(formData);
+      console.log(formData, 'formData');
+
       sendDataToAccess(formData);
       OverlayModule.startOverlay();
-      openOtherApp(channelLinkSchema?.[formData.channel]);
+      openOtherApp(chanelLinkSchema?.[formData.chanel]);
     }
   };
   return (
@@ -135,7 +136,7 @@ const SettingScreen = (props: Props) => {
           </Typo>
           <RadioButton.Group
             onValueChange={newValue =>
-              setFormData(prev => ({...prev, platform: newValue}))
+              handleChangeFormData('platform', newValue)
             }
             value={formData.platform}>
             <View
@@ -150,7 +151,7 @@ const SettingScreen = (props: Props) => {
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setFormData(prev => ({...prev, platform: 'golike'}));
+                  handleChangeFormData('platform', PLATFORM_TYPE.GOLIKE);
                 }}>
                 <RadioButton value="golike" />
                 <Typo>Golike</Typo>
@@ -158,7 +159,7 @@ const SettingScreen = (props: Props) => {
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setFormData(prev => ({...prev, platform: 'tds'}));
+                  handleChangeFormData('platform', PLATFORM_TYPE.TDS);
                 }}>
                 <RadioButton value="tds" />
                 <Typo>TDS</Typo>
@@ -166,7 +167,7 @@ const SettingScreen = (props: Props) => {
               <TouchableOpacity
                 style={styles.radioButton}
                 onPress={() => {
-                  setFormData(prev => ({...prev, platform: 'ttc'}));
+                  handleChangeFormData('platform', PLATFORM_TYPE.TTC);
                 }}>
                 <RadioButton value="ttc" />
                 <Typo>TTC</Typo>
@@ -204,8 +205,8 @@ const SettingScreen = (props: Props) => {
             }))}
             labelField="label"
             valueField="value"
-            onChange={value => {
-              console.log('value selected:', value);
+            onChange={data => {
+              handleChangeFormData('platformAccount', data.value);
             }}></Dropdown>
         </View>
         <View>
@@ -231,7 +232,7 @@ const SettingScreen = (props: Props) => {
             itemContainerStyle={{
               borderRadius: 4,
             }}
-            value={formData.channel}
+            value={formData.chanel}
             data={[
               {
                 value: 'tiktok',
@@ -240,8 +241,8 @@ const SettingScreen = (props: Props) => {
             ]}
             labelField={'label'}
             valueField="value"
-            onChange={value => {
-              console.log('value selected:', value);
+            onChange={data => {
+              handleChangeFormData('chanel', data.value);
             }}></Dropdown>
         </View>
         <View>
@@ -270,12 +271,12 @@ const SettingScreen = (props: Props) => {
             value={formData.workAccount}
             data={subAccounts.map(subAccount => ({
               label: subAccount.nickname,
-              value: subAccount.user_id,
+              value: subAccount.id,
             }))}
             labelField={'label'}
             valueField="value"
-            onChange={value => {
-              console.log('value selected:', value);
+            onChange={data => {
+              handleChangeFormData('workAccount', data.value);
             }}></Dropdown>
         </View>
         <View
@@ -310,7 +311,10 @@ const SettingScreen = (props: Props) => {
               mode="outlined"
               label="Dừng sau khi hoàn thành"
               placeholder="VD: 1000"
-              value={formData.stopBeforeSuccess.toString()}
+              value={formData.stopAfterSuccess.toString()}
+              onChangeText={text => {
+                handleChangeFormData('stopAfterSuccess', text);
+              }}
               style={{
                 borderColor: COLOR.primary,
                 backgroundColor: '#F1F4FF',
@@ -321,7 +325,10 @@ const SettingScreen = (props: Props) => {
               mode="outlined"
               label="Dừng sau khi thất bại"
               placeholder="VD: 1000"
-              value={formData.stopBeforeError.toString()}
+              value={formData.stopAfterError.toString()}
+              onChangeText={text => {
+                handleChangeFormData('stopAfterError', text);
+              }}
               style={{
                 borderColor: COLOR.primary,
                 backgroundColor: '#F1F4FF',
@@ -332,6 +339,9 @@ const SettingScreen = (props: Props) => {
               mode="outlined"
               label="Thời gian nghỉ sau mỗi lần hoàn thành"
               value={formData.timeDelay.toString()}
+              onChangeText={text => {
+                handleChangeFormData('timeDelay', text);
+              }}
               placeholder="VD: 1"
               style={{
                 borderColor: COLOR.primary,

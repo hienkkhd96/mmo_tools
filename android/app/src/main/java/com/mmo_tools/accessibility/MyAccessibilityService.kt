@@ -37,9 +37,9 @@ data class FormField(
         val platformAccount: String,
         val channel: String,
         val workAccount: String,
-        val stopBeforeSuccess: Int,
-        val stopBeforeError: Int,
-        val timeDelay: Int
+        val stopAfterSuccess: Int,
+        val stopAfterError: Int,
+        val timeDelay: Long
 )
 
 interface JobCallback {
@@ -54,6 +54,8 @@ class MyAccessibilityService : AccessibilityService() {
     public var columnSize: Int = 0
     public val positionFollow: Pair<Int, Int> = Pair(31, 38)
     public val positionLike: Pair<Int, Int> = Pair(100, 6)
+    public var successJob: Int = 0
+    public var failedJob: Int = 0
     private var currentToastView: View? = null
     private val jobScope = CoroutineScope(Dispatchers.Main + Job())
     companion object {
@@ -123,6 +125,10 @@ class MyAccessibilityService : AccessibilityService() {
 
         // Set the message on the toast
         val textView = toastView.findViewById<TextView>(R.id.toast_message)
+        val successView = toastView.findViewById<TextView>(R.id.success_job)
+        successView.text = "Thành công: $successJob"
+        val failedView = toastView.findViewById<TextView>(R.id.failed_job)
+        failedView.text = "Thất bại: $failedJob"
         textView.text = message
 
         // Create and configure the WindowManager parameters
@@ -176,7 +182,14 @@ class MyAccessibilityService : AccessibilityService() {
 
         val dataCollector = appData
         val account_id = dataCollector?.workAccount ?: return
+        val stopAfterError = dataCollector.stopAfterError
+        val stopAfterSuccess = dataCollector.stopAfterSuccess
+        if (successJob >= stopAfterSuccess || failedJob >= stopAfterError) {
+            showCustomToast("Đã hoàn tất lịch trình", autoClose = true)
+            return
+        }
 
+        println("Account ID: $account_id")
         val call =
                 golikeService.getJobs(
                         null,
@@ -218,7 +231,10 @@ class MyAccessibilityService : AccessibilityService() {
                                                     override fun onSuccess() {
                                                         if (!isStoped) {
                                                             jobScope.launch {
-                                                                delay(8000)
+                                                                val timeDelay =
+                                                                        dataCollector.timeDelay *
+                                                                                1000
+                                                                delay(timeDelay)
                                                                 handleAutoCollect()
                                                             }
                                                         }
@@ -422,9 +438,10 @@ class MyAccessibilityService : AccessibilityService() {
                     override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {
                             println("Job completed successfully")
+                            successJob += 1
                             callback.onSuccess() // Gọi onSuccess khi hoàn thành
                         } else {
-                            println("Request failed with status: ${response.code()}")
+                            println("Request failed with status: ${response.body()}")
                             jobScope.launch {
                                 delay(2000)
                                 if (!isStoped) {
@@ -492,6 +509,7 @@ class MyAccessibilityService : AccessibilityService() {
                     override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {
                             println("Skip job successfully")
+                            failedJob += 1
                             callback.onSuccess() // Gọi onSuccess khi hoàn thành
                         } else {
                             println("Request failed with status: ${response.code()}")
