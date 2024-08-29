@@ -15,7 +15,7 @@ import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import {useAppStore} from '../../store/app.store';
 import {useSnackbarStore} from '../../store/snackbar.store';
-
+import DeviceInfo from 'react-native-device-info';
 type Props = {
   navigation: any;
 };
@@ -34,14 +34,18 @@ const LoginByKey = ({navigation}: Props) => {
 
   const onSubmit = async (data: FieldValues) => {
     try {
-      const res = await authApi.loginByKey(data.key);
+      const deviceId = await DeviceInfo.getUniqueId();
+      const res = await authApi.loginByKey(data.key, deviceId);
       const loginData = res?.data;
-      if (res.status === 200 && loginData?.accessToken) {
+      const tokenInfor = loginData?.token;
+
+      if (res.status === 200 && tokenInfor?.accessToken) {
         await appStore.setToken({
           token: data.key,
-          accessToken: loginData?.accessToken,
-          refreshToken: loginData?.refreshToken,
+          accessToken: tokenInfor.accessToken,
+          refreshToken: tokenInfor.refreshToken,
           isAuthenticated: true,
+          expiredAt: loginData?.expiredAt,
         });
         snackBar.setMessage('Kích hoạt thành công', 'success');
         navigation.navigate('home');
@@ -54,9 +58,7 @@ const LoginByKey = ({navigation}: Props) => {
     }
     return;
   };
-  const handleToRegister = () => {
-    navigation.navigate('register');
-  };
+
   return (
     <KeyboardAvoidingView
       style={{

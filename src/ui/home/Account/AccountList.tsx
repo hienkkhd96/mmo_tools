@@ -87,6 +87,16 @@ const AccountList = ({navigation, route}: Props) => {
       );
     }
   };
+  const onRemoveAccount = (type: 'success' | 'error') => {
+    switch (type) {
+      case 'success':
+        snackbar.setMessage('Xoá tài khoản thành công.', type);
+      case 'error':
+        snackbar.setMessage('Xoá tài khoản thất bại.', type);
+      default:
+        return;
+    }
+  };
   useEffect(() => {
     fetchAccounts();
   }, [platformKey]);
@@ -111,6 +121,7 @@ const AccountList = ({navigation, route}: Props) => {
                 id={account.id}
                 type={platformKey}
                 key={account.id}
+                onRemoveAccount={onRemoveAccount}
               />
             );
           })}

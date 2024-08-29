@@ -8,6 +8,7 @@ import MuiIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
 import {useAppStore} from '../../../store/app.store';
+import HeaderLayout from '../../../components/header';
 
 type Props = {
   navigation: any;
@@ -53,18 +54,7 @@ const PlatformList = ({navigation}: Props) => {
   ];
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Typo type="h5">Mã: {token}</Typo>
-        <FaIcon name="eye-slash" size={22} color={COLOR.primary} />
-      </View>
-      <Typo
-        type="h6"
-        color={COLOR.secondary}
-        styles={{
-          fontSize: 18,
-        }}>
-        HSD: 23/12/2024
-      </Typo>
+      <HeaderLayout />
       <View style={{...styles.header, justifyContent: 'flex-start', gap: 10}}>
         <MuiIcon name="database-cog" size={20} color={COLOR.primary} />
         <Typo

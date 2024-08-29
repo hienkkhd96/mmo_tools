@@ -5,8 +5,27 @@ import {PLATFORM_TYPE} from '../../platform/type';
 import Typo from '../text';
 import {COLOR} from '../../constant';
 import {Account} from '../../ui/hooks/useFetchAccounts';
+import {TouchableOpacity} from 'react-native';
+import {platformAccountApi} from '../../api/platform-account';
 
-const AccountItem = (account: Account) => {
+const AccountItem = (
+  account: Account & {
+    onRemoveAccount: (type: 'success' | 'error') => void;
+  },
+) => {
+  const handleRemoveAccount = async (id: string) => {
+    try {
+      const res = await platformAccountApi.removeAccount(id);
+      console.log(res.data);
+
+      if (res.status === 200 && res.data) {
+        account.onRemoveAccount('success');
+        return;
+      }
+    } finally {
+      account.onRemoveAccount('error');
+    }
+  };
   return (
     <List.Item
       key={account.id}
@@ -35,7 +54,18 @@ const AccountItem = (account: Account) => {
             }}></View>
         </View>
       )}
-      right={() => <List.Icon icon="trash-can-outline" color={'black'} />}
+      right={() => {
+        return (
+          <TouchableOpacity
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+            onPress={() => handleRemoveAccount(account.id)}>
+            <List.Icon icon="trash-can-outline" color={'black'} />
+          </TouchableOpacity>
+        );
+      }}
     />
   );
 };

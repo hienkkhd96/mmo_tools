@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {create} from 'zustand';
 import authApi from '../api/auth';
+import dayjs from 'dayjs';
 
 type AppState = {
   token: string | null;
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  expiredAt: Date;
   fetchToken: () => Promise<void>;
   setToken: (data: Partial<AppState>) => Promise<void>;
 };
@@ -15,14 +17,18 @@ export const useAppStore = create<AppState>(set => ({
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
+  expiredAt: dayjs().toDate(),
   fetchToken: async () => {
     try {
       const token = await AsyncStorage.getItem('app-token');
+      console.log(token);
+
       if (!token) {
         return;
       }
       const res = await authApi.loginByKey(token);
-      const data = res?.data;
+      const data = res?.data?.token;
+      const expiredAt = res?.data?.expiredAt;
 
       if (res.status === 200 && data?.accessToken && data?.refreshToken) {
         await AsyncStorage.setItem('access_token', data?.accessToken);
@@ -33,8 +39,8 @@ export const useAppStore = create<AppState>(set => ({
           accessToken: accessToken,
           refreshToken: refreshToken,
           isAuthenticated: true,
+          expiredAt,
         });
-
         return;
       } else {
         throw new Error('Token không hợp lê');
@@ -45,13 +51,18 @@ export const useAppStore = create<AppState>(set => ({
       set({accessToken: null, refreshToken: null, isAuthenticated: false});
     }
   },
-  setToken: async ({token, accessToken, refreshToken}: Partial<AppState>) => {
+  setToken: async ({
+    token,
+    accessToken,
+    refreshToken,
+    expiredAt,
+  }: Partial<AppState>) => {
     if (!accessToken || !refreshToken || !token) {
       return;
     }
     await AsyncStorage.setItem('app-token', token);
     await AsyncStorage.setItem('access_token', accessToken);
     await AsyncStorage.setItem('refresh_token', refreshToken);
-    set({token, accessToken, refreshToken, isAuthenticated: true});
+    set({token, accessToken, refreshToken, isAuthenticated: true, expiredAt});
   },
 }));

@@ -86,7 +86,7 @@ export default function Bottomnavigation() {
           },
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Báo cáo"
         key="settings"
         component={ReportScreen}
@@ -102,7 +102,7 @@ export default function Bottomnavigation() {
             );
           },
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Nền tảng"
         component={AccountScreen}

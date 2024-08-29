@@ -30,11 +30,13 @@ import {
   useFetchInitConfig,
   useFetchSubAccount,
 } from '../hooks';
+import dayjs from 'dayjs';
+import HeaderLayout from '../../components/header';
 
 type Props = {};
 
 const SettingScreen = (props: Props) => {
-  const token = useAppStore(state => state.token);
+  const {token, expiredAt} = useAppStore();
   const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
     tiktok: 'tiktok://',
   };
@@ -100,18 +102,7 @@ const SettingScreen = (props: Props) => {
         flex: 1,
       }}>
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Typo type="h5">Mã: {token}</Typo>
-          <FaIcon name="eye-slash" size={22} color={COLOR.primary} />
-        </View>
-        <Typo
-          type="h6"
-          color={COLOR.secondary}
-          styles={{
-            fontSize: 18,
-          }}>
-          HSD: 23/12/2024
-        </Typo>
+        <HeaderLayout />
         <View style={{...styles.header, justifyContent: 'flex-start', gap: 10}}>
           <FaIcon name="cog" size={20} color={COLOR.primary} />
           <Typo

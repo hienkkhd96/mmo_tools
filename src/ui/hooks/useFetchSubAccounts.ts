@@ -23,6 +23,10 @@ export const useFetchSubAccount = (params: GetSubAccountsParams) => {
     (async () => {
       try {
         const Platform = PlatformFactory.createPlatform(token, platform);
+        if (!chanel) {
+          setData([]);
+          return;
+        }
         const res = await Platform.getSubAccounts(chanel);
         const data = res.data;
         if (res.status === 200 && data?.data) {

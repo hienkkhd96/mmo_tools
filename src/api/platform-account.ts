@@ -9,9 +9,12 @@ type CreatePltAccountDto = {
 
 export const platformAccountApi = {
   addAccount: async (data: CreatePltAccountDto) => {
-    return axiosClient.post(`/plt-account`, {...data});
+    return axiosClient.post(`/platform-accounts`, {...data});
   },
   getAccounts: async (platform: PLATFORM_TYPE) => {
     return axiosClient.get(`users/platform-accounts?platform=${platform}`);
+  },
+  removeAccount: async (id: string) => {
+    return axiosClient.delete(`platform-accounts/${id}?`);
   },
 };
