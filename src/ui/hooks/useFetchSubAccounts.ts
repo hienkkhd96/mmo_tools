@@ -31,12 +31,10 @@ export const useFetchSubAccount = (params: GetSubAccountsParams) => {
         const data = res.data;
         if (res.status === 200 && data?.data) {
           setData(data.data);
-          console.log(data.data);
         } else {
           throw res?.data;
         }
       } catch (error) {
-        console.log(error);
         setData([]);
       }
     })();

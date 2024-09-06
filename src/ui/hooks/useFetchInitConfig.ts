@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CONFIG_KEY = 'config_key_V1';
+export const CONFIG_KEY = 'config_key_V1';
 export type CONFIG_TYPE = {
   platform: PLATFORM_TYPE;
   platformAccount: string;

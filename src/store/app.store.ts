@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {create} from 'zustand';
 import authApi from '../api/auth';
 import dayjs from 'dayjs';
+import DeviceInfo from 'react-native-device-info';
 
 type AppState = {
   token: string | null;
@@ -21,15 +22,13 @@ export const useAppStore = create<AppState>(set => ({
   fetchToken: async () => {
     try {
       const token = await AsyncStorage.getItem('app-token');
-      console.log(token);
-
       if (!token) {
         return;
       }
-      const res = await authApi.loginByKey(token);
+      const deviceId = await DeviceInfo.getUniqueId();
+      const res = await authApi.loginByKey(token, deviceId);
       const data = res?.data?.token;
       const expiredAt = res?.data?.expiredAt;
-
       if (res.status === 200 && data?.accessToken && data?.refreshToken) {
         await AsyncStorage.setItem('access_token', data?.accessToken);
         await AsyncStorage.setItem('refresh_token', data?.refreshToken);
@@ -46,8 +45,6 @@ export const useAppStore = create<AppState>(set => ({
         throw new Error('Token không hợp lê');
       }
     } catch (error) {
-      console.log(error);
-
       set({accessToken: null, refreshToken: null, isAuthenticated: false});
     }
   },

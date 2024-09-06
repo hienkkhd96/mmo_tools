@@ -12,10 +12,12 @@ import InputBase from '../../components/input';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import authApi from '../../api/auth';
+import {useSnackbarStore} from '../../store/snackbar.store';
 type Props = {
   navigation: any;
 };
 const Login = ({navigation}: Props) => {
+  const snackbar = useSnackbarStore();
   const {
     control,
     handleSubmit,
@@ -30,7 +32,7 @@ const Login = ({navigation}: Props) => {
     try {
       await authApi.login(data.username, data.password);
     } catch (error: any) {
-      console.log(error?.response.data);
+      snackbar.setMessage(error?.response?.data, 'error');
     }
     return;
   };

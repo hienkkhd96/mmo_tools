@@ -24,7 +24,6 @@ export const useFetchAccount = (params: GetAccountInfoParams) => {
           throw res?.data;
         }
       } catch (error) {
-        console.log(error);
         setData([]);
       }
     })();

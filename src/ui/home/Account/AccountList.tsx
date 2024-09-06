@@ -51,7 +51,6 @@ const AccountList = ({navigation, route}: Props) => {
           token: data.token,
           type: platformKey,
         });
-        console.log(resAddAccount);
 
         if (resAddAccount.status === 200 || resAddAccount.status === 201) {
           snackbar.setMessage('Thêm tài khoản thành công', 'success');

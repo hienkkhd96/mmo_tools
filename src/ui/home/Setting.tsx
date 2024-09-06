@@ -86,8 +86,6 @@ const SettingScreen = (props: Props) => {
           action: () => OverlayModule.openAccessibilitySettings(),
         },
       );
-    } else if (!isInstalled) {
-      openPlayStore('market://details?id=tiktok');
     } else {
       saveConfig(formData);
       sendDataToAccess(formData);

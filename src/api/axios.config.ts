@@ -1,10 +1,12 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {CONFIG_KEY} from '../ui/hooks';
+import authApi from './auth';
 
 const axiosClient = axios.create({
   // baseURL:
   //   ' https://c18b-2405-4802-5edf-81d0-bcc7-f02e-3d5c-7b63.ngrok-free.app/v1/',
-  baseURL: 'http://10.0.2.2:8000/v1/',
+  baseURL: 'https://api.mmotools.online/v1/',
 
   headers: {
     'Content-Type': 'application/json',
@@ -34,7 +36,15 @@ axiosClient.interceptors.response.use(
     // Do something with response data
     return response;
   },
-  function (error) {
+  async function (error) {
+    if (error.response.status === 401) {
+      const refreshToken = await AsyncStorage.getItem('refresh_token');
+      if (refreshToken) {
+        const res = await authApi.refreshToken(refreshToken);
+        const data = res?.data?.token;
+        const expiredAt = res?.data?.expiredAt;
+      }
+    }
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
     return Promise.reject(error);
