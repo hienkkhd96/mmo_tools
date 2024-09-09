@@ -4,10 +4,7 @@ import {CONFIG_KEY} from '../ui/hooks';
 import authApi from './auth';
 
 const axiosClient = axios.create({
-  // baseURL:
-  //   ' https://c18b-2405-4802-5edf-81d0-bcc7-f02e-3d5c-7b63.ngrok-free.app/v1/',
   baseURL: 'https://api.mmotools.online/v1/',
-
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,7 +37,9 @@ axiosClient.interceptors.response.use(
     if (error.response.status === 401) {
       const refreshToken = await AsyncStorage.getItem('refresh_token');
       if (refreshToken) {
-        const res = await authApi.refreshToken(refreshToken);
+        const res = await axiosClient.post(`/auth/refresh-token`, {
+          refreshToken,
+        });
         const data = res?.data?.token;
         const expiredAt = res?.data?.expiredAt;
       }

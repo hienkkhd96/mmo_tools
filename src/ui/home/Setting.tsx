@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Linking,
@@ -12,31 +12,18 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {Button, List, RadioButton, TextInput} from 'react-native-paper';
 import FaIcon from 'react-native-vector-icons/FontAwesome5';
 import OverlayModule from '../../../src/modules/Overlay';
+import HeaderLayout from '../../components/header';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
-import {useAppStore} from '../../store/app.store';
-import {useDialogStore} from '../../store/dialog.store';
-import {
-  checkAppInstalled,
-  openOtherApp,
-  openPlayStore,
-  requestOverlayPermission,
-} from '../../utils/openAnotherApp';
-import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import {sendDataToAccess} from '../../modules/Access';
-import {
-  CONFIG_TYPE,
-  useFetchAccount,
-  useFetchInitConfig,
-  useFetchSubAccount,
-} from '../hooks';
-import dayjs from 'dayjs';
-import HeaderLayout from '../../components/header';
+import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
+import {useDialogStore} from '../../store/dialog.store';
+import {openOtherApp} from '../../utils/openAnotherApp';
+import {CONFIG_TYPE, useFetchInitConfig, useFetchSubAccount} from '../hooks';
 
 type Props = {};
 
 const SettingScreen = (props: Props) => {
-  const {token, expiredAt} = useAppStore();
   const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
     tiktok: 'tiktok://',
   };
@@ -44,11 +31,8 @@ const SettingScreen = (props: Props) => {
     initConfig: formData,
     saveConfig,
     alterConfig: setFormData,
+    accounts,
   } = useFetchInitConfig();
-
-  const {accounts} = useFetchAccount({
-    platform: formData.platform,
-  });
 
   const {subAccounts} = useFetchSubAccount({
     token: formData.platformAccount,
@@ -65,10 +49,6 @@ const SettingScreen = (props: Props) => {
   };
   const handleOpenApp = async () => {
     const isOverlayOn = await OverlayModule.checkOverlayPermission();
-    const isInstalled = await checkAppInstalled(
-      chanelLinkSchema?.[formData.chanel],
-    );
-
     const isOnAccessibility =
       await OverlayModule.isAccessibilityServiceEnabled();
 

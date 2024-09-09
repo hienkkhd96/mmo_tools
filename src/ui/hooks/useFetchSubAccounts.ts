@@ -1,9 +1,7 @@
+import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
-import {platformAccountApi} from '../../api/platform-account';
-import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
-import {golikeApi} from '../../api/golike';
 import {PlatformFactory} from '../../platform/platform.factory';
-
+import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 export type GetSubAccountsParams = {
   chanel: CHANEL_TYPE;
   token: string;
@@ -19,7 +17,10 @@ export type SubAccount = {
 export const useFetchSubAccount = (params: GetSubAccountsParams) => {
   const {chanel, token, platform} = params;
   const [data, setData] = useState<SubAccount[]>([]);
+  const isFocused = useIsFocused();
+
   useEffect(() => {
+    if (!isFocused) return;
     (async () => {
       try {
         const Platform = PlatformFactory.createPlatform(token, platform);
@@ -38,7 +39,7 @@ export const useFetchSubAccount = (params: GetSubAccountsParams) => {
         setData([]);
       }
     })();
-  }, [chanel, token, platform]);
+  }, [chanel, token, platform, isFocused]);
   return {
     subAccounts: data,
   };

@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import {platformAccountApi} from '../../api/platform-account';
 import {PLATFORM_TYPE} from '../../platform/type';
+import {useIsFocused} from '@react-navigation/native';
 
 export type GetAccountInfoParams = {
   platform: PLATFORM_TYPE;
@@ -14,7 +15,9 @@ export type Account = {
 export const useFetchAccount = (params: GetAccountInfoParams) => {
   const {platform} = params;
   const [data, setData] = useState<Account[]>([]);
+  const isFocused = useIsFocused();
   useEffect(() => {
+    if (!isFocused) return;
     (async () => {
       try {
         const res = await platformAccountApi.getAccounts(platform);
@@ -27,7 +30,7 @@ export const useFetchAccount = (params: GetAccountInfoParams) => {
         setData([]);
       }
     })();
-  }, [platform]);
+  }, [platform, isFocused]);
   return {
     accounts: data,
   };

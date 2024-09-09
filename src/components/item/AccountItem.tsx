@@ -16,11 +16,8 @@ const AccountItem = (
   const handleRemoveAccount = async (id: string) => {
     try {
       const res = await platformAccountApi.removeAccount(id);
-      if (res.status === 200 && res.data) {
-        account.onRemoveAccount('success');
-        return;
-      }
-    } finally {
+      account.onRemoveAccount('success');
+    } catch (error) {
       account.onRemoveAccount('error');
     }
   };

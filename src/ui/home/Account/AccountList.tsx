@@ -8,15 +8,13 @@ import {
   View,
 } from 'react-native';
 import {Button, List} from 'react-native-paper';
-import AntIcon from 'react-native-vector-icons/AntDesign';
 import {platformAccountApi} from '../../../api/platform-account';
 import InputBase from '../../../components/input';
+import AccountItem from '../../../components/item/AccountItem';
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
 import {PlatformFactory} from '../../../platform/platform.factory';
 import {useSnackbarStore} from '../../../store/snackbar.store';
-import {PlatformType} from './PlatformList';
-import AccountItem from '../../../components/item/AccountItem';
 import {Account} from '../../hooks';
 
 type Props = {
@@ -33,6 +31,8 @@ const AccountList = ({navigation, route}: Props) => {
     control,
     formState: {errors},
     handleSubmit,
+    reset,
+    watch,
   } = useForm<FieldValues>({
     defaultValues: {
       token: '',
@@ -55,6 +55,7 @@ const AccountList = ({navigation, route}: Props) => {
         if (resAddAccount.status === 200 || resAddAccount.status === 201) {
           snackbar.setMessage('Thêm tài khoản thành công', 'success');
           fetchAccounts();
+          reset({token: ''});
         } else {
           throw new Error(res.data);
         }
@@ -90,8 +91,12 @@ const AccountList = ({navigation, route}: Props) => {
     switch (type) {
       case 'success':
         snackbar.setMessage('Xoá tài khoản thành công.', type);
+        fetchAccounts();
+        break;
       case 'error':
         snackbar.setMessage('Xoá tài khoản thất bại.', type);
+        fetchAccounts();
+        break;
       default:
         return;
     }
@@ -137,6 +142,7 @@ const AccountList = ({navigation, route}: Props) => {
           label="Token"
           placeholder="Điền token"
           name="token"
+          value={watch('token')}
         />
         <Button
           onPress={handleSubmit(onSubmit)}

@@ -1,7 +1,8 @@
 import {useEffect, useState} from 'react';
 import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {useIsFocused} from '@react-navigation/native';
+import {useFetchAccount} from './useFetchAccounts';
 export const CONFIG_KEY = 'config_key_V1';
 export type CONFIG_TYPE = {
   platform: PLATFORM_TYPE;
@@ -16,13 +17,17 @@ const initData: CONFIG_TYPE = {
   platform: PLATFORM_TYPE.GOLIKE,
   platformAccount: '',
   chanel: CHANEL_TYPE.TIKTOK,
-  workAccount: '803733',
+  workAccount: '',
   stopAfterSuccess: 9999,
   stopAfterError: 9999,
   timeDelay: 5,
 };
 export const useFetchInitConfig = () => {
-  const [data, setData] = useState(initData);
+  const [data, setData] = useState<CONFIG_TYPE>(initData);
+  const isFocused = useIsFocused();
+  const {accounts} = useFetchAccount({
+    platform: data.platform,
+  });
   const saveConfig = async (config: CONFIG_TYPE) => {
     await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(config));
   };
@@ -31,29 +36,42 @@ export const useFetchInitConfig = () => {
     value,
   }: {
     key: keyof CONFIG_TYPE;
-    value: any;
+    value: CONFIG_TYPE[keyof CONFIG_TYPE];
   }) => {
     setData(prev => ({...prev, [key]: value}));
-    await saveConfig(data);
+    await saveConfig({...data, [key]: value});
   };
   const getInitData = async () => {
+    if (!isFocused) return;
     try {
       const config = await AsyncStorage.getItem(CONFIG_KEY);
       if (config) {
-        setData(JSON.parse(config));
-        return;
+        const configData = JSON.parse(config);
+        if (!accounts || accounts.length === 0) {
+          setData({...configData, platformAccount: ''});
+          return;
+        }
+        if (
+          accounts.some(account => account.token === configData.platformAccount)
+        ) {
+          setData(configData);
+        } else {
+          setData({...configData, platformAccount: accounts[0].token});
+        }
+      } else {
+        setData(initData);
       }
-      setData(initData);
     } catch (error) {
       setData(initData);
     }
   };
   useEffect(() => {
     getInitData();
-  }, []);
+  }, [isFocused]);
   return {
     initConfig: data,
     saveConfig,
     alterConfig,
+    accounts,
   };
 };
