@@ -26,9 +26,7 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
         reactContext.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
     private var toggleButton: Button? = null
-    private var likeButton: Button? = null
     private var isStarted = false
-    private var isShowLikePosition = false
 
     override fun getName(): String {
         return "OverlayModule"
@@ -58,19 +56,7 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
                     gravity = Gravity.TOP
                     setPadding(16, 16, 16, 16)
                 }
-        likeButton =
-                Button(context).apply {
-                    this.text = "Vị trí like"
-                    this.setOnClickListener {
-                        if (isShowLikePosition) {
-                            sendHideLikePosition(context)
-                            isShowLikePosition = false
-                        } else {
-                            sendShowLikePosition(context)
-                            isShowLikePosition = true
-                        }
-                    }
-                }
+        
         toggleButton =
                 Button(context).apply {
                     this.text = "Start"
@@ -78,12 +64,9 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
                         if (isStarted) {
                             sendEvent("onStopEvent", null)
                             isStarted = false
-                            overlayLayout?.addView(likeButton)
                             stopOverlay()
                         } else {
                             this.text = "Stop"
-                            sendHideLikePosition(context)
-                            overlayLayout?.removeView(likeButton)
                             sendEvent("onStartEvent", null)
                             isStarted = true
                         }
@@ -91,7 +74,6 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
                 }
 
         overlayLayout?.addView(toggleButton)
-        overlayLayout?.addView(likeButton)
         windowManager.addView(overlayLayout, params)
     }
 
@@ -158,12 +140,5 @@ class OverlayModule(private val reactContext: ReactApplicationContext) :
         isStarted = status
     }
 
-    fun sendShowLikePosition(context: Context) {
-        val intent = Intent("com.mmo_tools.showLikePosition")
-        context.sendBroadcast(intent)
-    }
-    fun sendHideLikePosition(context: Context) {
-        val intent = Intent("com.mmo_tools.hideLikePosition")
-        context.sendBroadcast(intent)
-    }
+    
 }

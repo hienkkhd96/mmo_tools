@@ -29,12 +29,16 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.TextView
 import com.google.gson.Gson
 import com.mmo_tools.R
-import golikeService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.delay
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.util.DisplayMetrics
+import com.mmo_tools.interfaces.platforms.PlatformFactory
+import com.mmo_tools.interfaces.platforms.PlatformService
+
+
 
 data class FormField(
         val platform: String,
@@ -65,8 +69,7 @@ class MyAccessibilityService : AccessibilityService() {
     private lateinit var floatingView: View
     private lateinit var windowManager: WindowManager
     private lateinit var sharedPreferences: SharedPreferences
-    private var likePositionX: Int = 100
-    private var likePositionY: Int = 100
+    private lateinit var platformService: PlatformService
     companion object {
         private var accessibilityService: MyAccessibilityService? = null
 
@@ -90,10 +93,6 @@ class MyAccessibilityService : AccessibilityService() {
                     } else if (intent.action == "com.mmo_tools.accessibility.STOP_AUTO_COLLECT") {
                         showCustomToast("App đang dừng", autoClose = true)
                         isStoped = true
-                    } else if (intent.action == "com.mmo_tools.showLikePosition") {
-                        showFloatingCircle()
-                    } else if (intent.action == "com.mmo_tools.hideLikePosition") {
-                        hideFloatingCircle()
                     }
                 }
             }
@@ -117,26 +116,6 @@ class MyAccessibilityService : AccessibilityService() {
                 IntentFilter("com.mmo_tools.accessibility.STOP_AUTO_COLLECT"),
                 Context.RECEIVER_EXPORTED
         )
-        registerReceiver(
-                receiver,
-                IntentFilter("com.mmo_tools.showLikePosition"),
-                Context.RECEIVER_EXPORTED
-        )
-        registerReceiver(
-                receiver,
-                IntentFilter("com.mmo_tools.hideLikePosition"),
-                Context.RECEIVER_EXPORTED
-        )
-        val (screenWidth, screenHeight) = getScreenSize()
-        rowSize = screenWidth / 100
-        columnSize = screenHeight / 100
-        sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
-        if (::sharedPreferences.isInitialized) {
-            likePositionX = sharedPreferences.getInt("likePosition_x", 100)
-            likePositionY = sharedPreferences.getInt("likePosition_y", 100)
-        } else {
-            Log.e("MyAccessibilityService", "sharedPreferences not initialized")
-        }
     }
     override fun onDestroy() {
         jobScope.cancel()
@@ -208,6 +187,8 @@ class MyAccessibilityService : AccessibilityService() {
         val account_id = dataCollector?.workAccount ?: return
         val stopAfterError = dataCollector.stopAfterError
         val stopAfterSuccess = dataCollector.stopAfterSuccess
+        val platform = dataCollector.platform
+        platformService = PlatformFactory.create(platform)
         if (successJob >= stopAfterSuccess || failedJob >= stopAfterError) {
             showCustomToast("Đã hoàn tất lịch trình", autoClose = false)
             isStoped = true
@@ -215,8 +196,7 @@ class MyAccessibilityService : AccessibilityService() {
         }
 
         val call =
-                golikeService.getJobs(
-                        null,
+                platformService.getJobs(
                         accountId = account_id,
                         authHeader = "Bearer ${dataCollector.platformAccount}"
                 )
@@ -243,7 +223,7 @@ class MyAccessibilityService : AccessibilityService() {
                                 jobScope.launch {
                                     delay(3000)
                                     if (!isStoped) {
-                                        autoClick(likePositionX, likePositionX)
+                                        clickDoubleCenterScreen(this@MyAccessibilityService)
                                         completeJob(
                                                 account_id,
                                                 job_id.toString(),
@@ -334,7 +314,9 @@ class MyAccessibilityService : AccessibilityService() {
                 }
         )
     }
-    private fun performClickOnTarget(buttonText: String, type: String) {
+    private fun performClickOnTarget(buttonText: String, type: String, count: Int = 0) {
+        if (isStoped) return
+        
         val rootNode: AccessibilityNodeInfo? = rootInActiveWindow
         rootNode?.let {
             var nodes: List<AccessibilityNodeInfo>?
@@ -357,7 +339,14 @@ class MyAccessibilityService : AccessibilityService() {
                     autoClick(centerX, centerY)
                 }
             } else {
-                Log.e("MyAccessibilityService", "Button not found")
+                jobScope.launch {
+                    if (count <= 2) {
+                        delay(1500)
+                        performClickOnTarget(buttonText, type, count + 1)
+                    } else {
+                        Log.e("MyAccessibilityService", "Button not found")
+                    }
+                }
             }
         }
                 ?: Log.e("MyAccessibilityService", "Root node is null")
@@ -447,7 +436,7 @@ class MyAccessibilityService : AccessibilityService() {
         val dataCollector = appData
         println("job_id: $job_id account_id:")
         val call =
-                golikeService.completeJob(
+                platformService.completeJob(
                         CompleteJobPayload(
                                 ads_id = job_id.toInt(),
                                 account_id = account_id.toInt(),
@@ -518,7 +507,7 @@ class MyAccessibilityService : AccessibilityService() {
 
         val dataCollector = appData
         val call =
-                golikeService.skipJob(
+            platformService.skipJob(
                         SkipJobPayload(
                                 ads_id = job_id,
                                 account_id = account_id,
@@ -578,52 +567,31 @@ class MyAccessibilityService : AccessibilityService() {
     fun getCellIndex(position: Int, cellSize: Int): Int {
         return position / cellSize
     }
-    fun showFloatingCircle() {
-        if (!::floatingView.isInitialized) {
-            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            floatingView = inflater.inflate(R.layout.floating_circle, null)
-
-            val params =
-                    WindowManager.LayoutParams(
-                                    WindowManager.LayoutParams.WRAP_CONTENT,
-                                    WindowManager.LayoutParams.WRAP_CONTENT,
-                                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-                                    PixelFormat.TRANSLUCENT
-                            )
-                            .apply {
-                                gravity = Gravity.TOP or Gravity.LEFT
-                                x = likePositionX
-                                y = likePositionY
-                            }
-            windowManager.addView(floatingView, params)
-
-            floatingView.setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_MOVE -> {
-                        params.x = (event.rawX - floatingView.width / 2).toInt()
-                        params.y = (event.rawY - floatingView.height / 2).toInt()
-                        windowManager.updateViewLayout(floatingView, params)
-                        with(sharedPreferences.edit()) {
-                            putInt("likePosition_x", params.x)
-                            putInt("likePosition_y", params.y)
-                            apply()
-                        }
-                    }
-                }
-                true
-            }
+   
+    fun clickDoubleCenterScreen(context: Context) {
+        val (centerX, centerY) = getScreenCenter(context)
+        jobScope.launch {
+            autoClick(centerX, centerY)
+            delay(200)
+            autoClick(centerX, centerY)
         }
-        floatingView.visibility = View.VISIBLE
+        
     }
-
-    fun hideFloatingCircle() {
-        if (::floatingView.isInitialized) {
-            floatingView.visibility = View.GONE
-        }
+    fun getScreenCenter(context: Context): Pair<Int, Int> {
+        // Get the WindowManager service
+        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    
+        // Create a DisplayMetrics object to hold the screen metrics
+        val displayMetrics = DisplayMetrics()
+    
+        // Get the display metrics from the default display
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+    
+        // Calculate the center position
+        val centerX = displayMetrics.widthPixels / 2
+        val centerY = displayMetrics.heightPixels / 2
+    
+        return Pair(centerX, centerY)
     }
 }

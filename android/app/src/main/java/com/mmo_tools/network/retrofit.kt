@@ -1,6 +1,7 @@
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 val okHttpClient =
         OkHttpClient.Builder()
@@ -13,6 +14,8 @@ val okHttpClient =
                                         .build()
                         chain.proceed(newRequest)
                 }
+                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
                 .build()
 
 val retrofit =
@@ -22,4 +25,4 @@ val retrofit =
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
-val golikeService: GolikeServie = retrofit.create(GolikeServie::class.java)
+val golikeService: GolikeRequest = retrofit.create(GolikeRequest::class.java)

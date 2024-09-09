@@ -48,7 +48,7 @@ data class SkipJobPayload(
 
 data class TiktokJobResponse(val data: TiktokJob)
 
-interface GolikeServie {
+interface GolikeRequest {
         @GET("advertising/publishers/tiktok/jobs")
         fun getJobs(
                 @Query("data") data: String?,
