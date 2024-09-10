@@ -1,13 +1,14 @@
-import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import PlatformList from './PlatformList';
+import React from 'react';
+import {StyleSheet} from 'react-native';
 import AccountList from './AccountList';
+import PlatformList from './PlatformList';
 
 type Props = {};
 
-const AccountScreen = (props: Props) => {
+const PlatformScreen = (props: Props) => {
   const AccountStack = createNativeStackNavigator();
+
   return (
     <AccountStack.Navigator
       screenOptions={{
@@ -31,6 +32,4 @@ const AccountScreen = (props: Props) => {
   );
 };
 
-export default AccountScreen;
-
-const styles = StyleSheet.create({});
+export default PlatformScreen;

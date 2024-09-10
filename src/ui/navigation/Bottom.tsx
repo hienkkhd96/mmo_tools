@@ -7,9 +7,9 @@ import {BottomNavigation} from 'react-native-paper';
 import FeaIcon from 'react-native-vector-icons/Feather';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {COLOR} from '../../constant';
-import ReportScreen from '../home/Report';
+import PlatformScreen from '../home/Platform';
 import SettingScreen from '../home/Setting';
-import AccountScreen from '../home/Account';
+import AccountSettingScreen from '../home/AccountSetting';
 
 const Tab = createBottomTabNavigator();
 
@@ -86,26 +86,10 @@ export default function Bottomnavigation() {
           },
         }}
       />
-      {/* <Tab.Screen
-        name="Báo cáo"
-        key="settings"
-        component={ReportScreen}
-        options={{
-          tabBarIcon: ({color, size}) => {
-            return (
-              <Icon
-                key="clock"
-                name="clock-time-eight-outline"
-                size={size}
-                color={color}
-              />
-            );
-          },
-        }}
-      /> */}
+
       <Tab.Screen
         name="Nền tảng"
-        component={AccountScreen}
+        component={PlatformScreen}
         options={{
           tabBarIcon: ({color, size}) => {
             return (
@@ -116,6 +100,16 @@ export default function Bottomnavigation() {
                 color={color}
               />
             );
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Tài khoản"
+        key="account"
+        component={AccountSettingScreen}
+        options={{
+          tabBarIcon: ({color, size}) => {
+            return <FeaIcon key="user" name="user" size={size} color={color} />;
           },
         }}
       />

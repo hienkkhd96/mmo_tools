@@ -2,13 +2,11 @@ import React, {ReactNode, useState} from 'react';
 import {ScrollView, StyleSheet, View} from 'react-native';
 import {List} from 'react-native-paper';
 import AntIcon from 'react-native-vector-icons/AntDesign';
-import FaIcon from 'react-native-vector-icons/FontAwesome5';
 import MuiIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
-import {useAppStore} from '../../../store/app.store';
-import HeaderLayout from '../../../components/header';
+import {useFetchCountAccounts} from '../../hooks/useFetchCountAccounts';
 
 type Props = {
   navigation: any;
@@ -24,7 +22,7 @@ const PlatformList = ({navigation}: Props) => {
   const onPlatformLogin = () => {
     setIsPlatformLogin(!isPlatformLogin);
   };
-  const token = useAppStore(state => state.token);
+  const {counts} = useFetchCountAccounts();
 
   const hadlePressPlatform = (platform: PlatformType) => {
     navigation.navigate(`accounts`, {
@@ -37,24 +35,23 @@ const PlatformList = ({navigation}: Props) => {
       name: 'Golike',
       key: 'golike',
       icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
+      totalAccounts: counts?.golike || 0,
     },
     {
       name: 'Trao đổi sub',
       key: 'tds',
       icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
+      totalAccounts: counts?.tds || 0,
     },
     {
       name: 'Tương tác chéo',
       key: 'ttc',
       icon: <AntIcon name="like2" size={20} color={COLOR.light} />,
-      totalAccounts: 10,
+      totalAccounts: counts?.ttc || 0,
     },
   ];
   return (
     <ScrollView style={styles.container}>
-      <HeaderLayout />
       <View style={{...styles.header, justifyContent: 'flex-start', gap: 10}}>
         <MuiIcon name="database-cog" size={20} color={COLOR.primary} />
         <Typo

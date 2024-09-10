@@ -17,4 +17,7 @@ export const platformAccountApi = {
   removeAccount: async (id: string) => {
     return axiosClient.delete(`platform-accounts/${id}?`);
   },
+  countAccount: async () => {
+    return axiosClient.get(`/platform-accounts/counts`);
+  },
 };

@@ -12,7 +12,6 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {Button, List, RadioButton, TextInput} from 'react-native-paper';
 import FaIcon from 'react-native-vector-icons/FontAwesome5';
 import OverlayModule from '../../../src/modules/Overlay';
-import HeaderLayout from '../../components/header';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import {sendDataToAccess} from '../../modules/Access';
@@ -80,7 +79,6 @@ const SettingScreen = (props: Props) => {
         flex: 1,
       }}>
       <ScrollView style={styles.container}>
-        <HeaderLayout />
         <View style={{...styles.header, justifyContent: 'flex-start', gap: 10}}>
           <FaIcon name="cog" size={20} color={COLOR.primary} />
           <Typo

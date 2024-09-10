@@ -4,7 +4,7 @@ import {CONFIG_KEY} from '../ui/hooks';
 import authApi from './auth';
 
 const axiosClient = axios.create({
-  baseURL: 'https://api.mmotools.online/v1/',
+  baseURL: 'http://10.0.2.2:8000/v1/',
   headers: {
     'Content-Type': 'application/json',
   },

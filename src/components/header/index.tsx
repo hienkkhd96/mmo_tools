@@ -31,7 +31,7 @@ const HeaderLayout = (props: Props) => {
         styles={{
           fontSize: 18,
         }}>
-        HSD: {dayjs(expiredAt).format('DD/MM/YYYY')}
+        HSD: {dayjs(expiredAt).format('DD/MM/YYYY HH:mm')}
       </Typo>
     </View>
   );

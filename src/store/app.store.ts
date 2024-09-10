@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {create} from 'zustand';
-import authApi from '../api/auth';
 import dayjs from 'dayjs';
-import DeviceInfo from 'react-native-device-info';
+import {create} from 'zustand';
+import {jwtDecode} from 'jwt-decode';
+import {tokenApi} from '../api/token';
 
 type AppState = {
   token: string | null;
@@ -12,6 +12,7 @@ type AppState = {
   expiredAt: Date;
   fetchToken: () => Promise<void>;
   setToken: (data: Partial<AppState>) => Promise<void>;
+  logout: () => Promise<void>;
 };
 export const useAppStore = create<AppState>(set => ({
   token: null,
@@ -21,24 +22,22 @@ export const useAppStore = create<AppState>(set => ({
   expiredAt: dayjs().toDate(),
   fetchToken: async () => {
     try {
-      const token = await AsyncStorage.getItem('app-token');
-      if (!token) {
-        return;
-      }
-      const deviceId = await DeviceInfo.getUniqueId();
-      const res = await authApi.loginByKey(token, deviceId);
-      const data = res?.data?.token;
-      const expiredAt = res?.data?.expiredAt;
-      if (res.status === 200 && data?.accessToken && data?.refreshToken) {
-        await AsyncStorage.setItem('access_token', data?.accessToken);
-        await AsyncStorage.setItem('refresh_token', data?.refreshToken);
-        const {accessToken, refreshToken} = data;
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (accessToken) {
+        const decoded: any = jwtDecode(accessToken);
+        if (!decoded.tokenKey) {
+          throw new Error('Token không hợp lê');
+        }
+        if (dayjs().isAfter(dayjs.unix(decoded.exp))) {
+          throw new Error('Token đã hết hạn');
+        }
+        const tokenInfo = await tokenApi.getInfoToken(decoded.tokenKey);
+        const dataToken = tokenInfo.data;
         set({
-          token: token,
           accessToken: accessToken,
-          refreshToken: refreshToken,
           isAuthenticated: true,
-          expiredAt,
+          token: decoded.tokenKey,
+          expiredAt: dayjs(dataToken.expiredAt).toDate(),
         });
         return;
       } else {
@@ -61,5 +60,16 @@ export const useAppStore = create<AppState>(set => ({
     await AsyncStorage.setItem('access_token', accessToken);
     await AsyncStorage.setItem('refresh_token', refreshToken);
     set({token, accessToken, refreshToken, isAuthenticated: true, expiredAt});
+  },
+  logout: async () => {
+    await AsyncStorage.removeItem('access_token');
+    await AsyncStorage.removeItem('refresh_token');
+    await AsyncStorage.removeItem('app-token');
+    set({
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      token: null,
+    });
   },
 }));
