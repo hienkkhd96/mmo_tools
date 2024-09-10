@@ -314,7 +314,7 @@ class MyAccessibilityService : AccessibilityService() {
                 }
         )
     }
-    private fun performClickOnTarget(buttonText: String, type: String, count: Int = 0) {
+    private fun performClickOnTarget(buttonText: String, type: String) {
         if (isStoped) return
         
         val rootNode: AccessibilityNodeInfo? = rootInActiveWindow
@@ -337,15 +337,6 @@ class MyAccessibilityService : AccessibilityService() {
                     val centerX = getCenterX(nodeToClick)
                     val centerY = getCenterY(nodeToClick)
                     autoClick(centerX, centerY)
-                }
-            } else {
-                jobScope.launch {
-                    if (count <= 2) {
-                        delay(1500)
-                        performClickOnTarget(buttonText, type, count + 1)
-                    } else {
-                        Log.e("MyAccessibilityService", "Button not found")
-                    }
                 }
             }
         }
