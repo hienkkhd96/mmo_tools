@@ -11,6 +11,7 @@ import {View} from 'react-native';
 import LoginByKey from './src/ui/login/LoginByKey';
 import {useAppStore} from './src/store/app.store';
 import GlobalDialog from './src/components/dialog';
+import LoginGolikeWebView from './src/ui/home/Platform/LoginGolikeWebView';
 function App(): React.JSX.Element {
   const Stack = createNativeStackNavigator();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +41,10 @@ function App(): React.JSX.Element {
             <>
               <Stack.Screen name="home" component={Bottomnavigation} />
               <Stack.Screen name="account/:id" component={Bottomnavigation} />
+              <Stack.Screen
+                name="login-golike"
+                component={LoginGolikeWebView}
+              />
             </>
           ) : (
             <>

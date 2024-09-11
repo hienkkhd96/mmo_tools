@@ -16,6 +16,7 @@ import {COLOR} from '../../constant';
 import {useAppStore} from '../../store/app.store';
 import {useSnackbarStore} from '../../store/snackbar.store';
 import DeviceInfo from 'react-native-device-info';
+import {Linking} from 'react-native';
 type Props = {
   navigation: any;
 };
@@ -116,14 +117,42 @@ const LoginByKey = ({navigation}: Props) => {
               }}>
               Liên hệ mua key:
             </Typo>
-            <Typo type="subtitle1">Zalo: 038.705.4982</Typo>
-            <Typo type="subtitle1">Tele: 038.705.4982</Typo>
-            <Typo type="subtitle1">Tele: 038.705.4982</Typo>
+            <TouchableOpacity
+              onPress={() => {
+                Linking.openURL('https://zalo.me/0387054982');
+              }}>
+              <Typo type="subtitle1">Zalo: 038.705.4982</Typo>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                Linking.openURL('https://t.me/autokiemtienonline');
+              }}>
+              <Typo type="subtitle1">Tele: 038.705.4982</Typo>
+            </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.socialView}>
+        {/* <View style={styles.socialView}>
           <TouchableOpacity style={styles.buttonSocial}>
-            <Icon name="snapchat" size={20} color="black" />
+            <View
+              style={{
+                backgroundColor: 'black',
+                width: 18,
+                height: 18,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 10,
+              }}>
+              <Typo
+                type="subtitle2"
+                color="white"
+                styles={{
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                }}>
+                Z
+              </Typo>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.buttonSocial}>
             <Icon name="facebook" size={20} color="black" />
@@ -131,7 +160,7 @@ const LoginByKey = ({navigation}: Props) => {
           <TouchableOpacity style={styles.buttonSocial}>
             <Icon name="telegram" size={20} color="black" />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
     </KeyboardAvoidingView>
   );

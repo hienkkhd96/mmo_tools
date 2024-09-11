@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import {Button, List} from 'react-native-paper';
 import {platformAccountApi} from '../../../api/platform-account';
-import InputBase from '../../../components/input';
 import AccountItem from '../../../components/item/AccountItem';
 import Typo from '../../../components/text';
 import {COLOR} from '../../../constant';
@@ -23,41 +22,38 @@ type Props = {
 };
 
 const AccountList = ({navigation, route}: Props) => {
-  const {platformKey, platformName} = route.params;
+  const {platformKey, platformName, token} = route.params;
   if (!platformKey) {
     navigation.goBack();
+    return;
   }
-  const {
-    control,
-    formState: {errors},
-    handleSubmit,
-    reset,
-    watch,
-  } = useForm<FieldValues>({
-    defaultValues: {
-      token: '',
-    },
-  });
   const snackbar = useSnackbarStore();
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const onSubmit = async (data: FieldValues) => {
+  const addAccounts = async () => {
     try {
-      const platform = PlatformFactory.createPlatform(data.token, platformKey);
+      const platform = PlatformFactory.createPlatform(token, platformKey);
       const res = await platform.getMe();
-
       if (res.data && res.status === 200) {
         const resAddAccount = await platformAccountApi.addAccount({
           accountName: res.data?.data?.username,
-          token: data.token,
+          token: token,
           type: platformKey,
         });
 
         if (resAddAccount.status === 200 || resAddAccount.status === 201) {
           snackbar.setMessage('Thêm tài khoản thành công', 'success');
-          fetchAccounts();
-          reset({token: ''});
+          navigation.replace('accounts', {
+            platformKey: platformKey,
+            platformName: platformName,
+          });
         } else {
-          throw new Error(res.data);
+          snackbar.setMessage(
+            typeof resAddAccount.data === 'string'
+              ? resAddAccount.data
+              : resAddAccount.data?.message ||
+                  'Thêm tài khoản thất bại. Vui lòng kiểm tra lại.',
+            'error',
+          );
         }
       }
     } catch (error: any) {
@@ -66,8 +62,8 @@ const AccountList = ({navigation, route}: Props) => {
         return;
       }
       snackbar.setMessage(
-        typeof error === 'string'
-          ? error
+        typeof error?.response?.data?.message === 'string'
+          ? error?.response?.data?.message
           : error?.message || 'Thêm tài khoản thát bại. Vui lòng kiểm tra lại.',
         'error',
       );
@@ -103,7 +99,10 @@ const AccountList = ({navigation, route}: Props) => {
   };
   useEffect(() => {
     fetchAccounts();
-  }, [platformKey]);
+    if (token) {
+      addAccounts();
+    }
+  }, [platformKey, token]);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -131,21 +130,14 @@ const AccountList = ({navigation, route}: Props) => {
           })}
         </List.Section>
       </ScrollView>
+
       <View
         style={{
           marginBottom: 10,
           padding: 16,
         }}>
-        <InputBase
-          control={control}
-          errors={errors}
-          label="Token"
-          placeholder="Điền token"
-          name="token"
-          value={watch('token')}
-        />
         <Button
-          onPress={handleSubmit(onSubmit)}
+          onPress={() => navigation.navigate('login-golike')}
           mode="contained"
           labelStyle={{
             fontSize: 20,

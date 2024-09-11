@@ -1,8 +1,8 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-import HeaderLayout from '../../../components/header';
+import {StyleSheet, View} from 'react-native';
 import {Button} from 'react-native-paper';
 import authApi from '../../../api/auth';
+import HeaderLayout from '../../../components/header';
 import {useAppStore} from '../../../store/app.store';
 import {useSnackbarStore} from '../../../store/snackbar.store';
 
