@@ -19,10 +19,15 @@ import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import {useDialogStore} from '../../store/dialog.store';
 import {openOtherApp} from '../../utils/openAnotherApp';
 import {CONFIG_TYPE, useFetchInitConfig, useFetchSubAccount} from '../hooks';
+import {tokenApi} from '../../api/token';
+import {useAppStore} from '../../store/app.store';
+import {useSnackbarStore} from '../../store/snackbar.store';
 
 type Props = {};
 
 const SettingScreen = (props: Props) => {
+  const {token} = useAppStore();
+  const snackbar = useSnackbarStore();
   const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
     tiktok: 'tiktok://',
   };
@@ -46,7 +51,24 @@ const SettingScreen = (props: Props) => {
       value: value,
     });
   };
+  const handleCheckTokenExpired = async () => {
+    try {
+      const res = await tokenApi.checkTokenExpired(token || '');
+      if (res.data.isExpired === true) {
+        snackbar.setMessage('Token đã hết hạn', 'error');
+      }
+      return res.data.isExpired === true;
+    } catch (error) {
+      console.log(error);
+      snackbar.setMessage('Token đã hết hạng', 'error');
+      return true;
+    }
+  };
   const handleOpenApp = async () => {
+    const isTokenExpired = await handleCheckTokenExpired();
+    if (isTokenExpired) {
+      return;
+    }
     const isOverlayOn = await OverlayModule.checkOverlayPermission();
     const isOnAccessibility =
       await OverlayModule.isAccessibilityServiceEnabled();

@@ -1,7 +1,5 @@
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CONFIG_KEY} from '../ui/hooks';
-import authApi from './auth';
+import axios from 'axios';
 
 const axiosClient = axios.create({
   baseURL: 'https://api.mmotools.online/v1/',
