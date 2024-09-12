@@ -37,11 +37,9 @@ const LoginByKey = ({navigation}: Props) => {
     try {
       const deviceId = await DeviceInfo.getUniqueId();
       const res = await authApi.loginByKey(data.key, deviceId);
-      console.log(res);
-
       const loginData = res?.data;
       const tokenInfor = loginData?.token;
-      if (res.status === 200 && tokenInfor?.accessToken) {
+      if (tokenInfor?.accessToken) {
         await appStore.setToken({
           token: data.key,
           accessToken: tokenInfor.accessToken,
@@ -53,11 +51,13 @@ const LoginByKey = ({navigation}: Props) => {
         navigation.navigate('home');
         return;
       } else {
+        console.log(res);
+
+        snackBar.setMessage(res.data.message || 'Đăng nhập thất bại', 'error');
         throw new Error('Kích hoạt thất bại');
       }
     } catch (error: any) {
-      console.log(error.response.data);
-
+      console.log(error);
       snackBar.setMessage(
         error.response.data.message || 'Đăng nhập thất bại',
         'error',

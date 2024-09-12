@@ -15,7 +15,7 @@ import OverlayModule from '../../../src/modules/Overlay';
 import Typo from '../../components/text';
 import {COLOR} from '../../constant';
 import {sendDataToAccess} from '../../modules/Access';
-import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
+import {CHANNEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import {useDialogStore} from '../../store/dialog.store';
 import {openOtherApp} from '../../utils/openAnotherApp';
 import {CONFIG_TYPE, useFetchInitConfig, useFetchSubAccount} from '../hooks';
@@ -28,8 +28,9 @@ type Props = {};
 const SettingScreen = (props: Props) => {
   const {token} = useAppStore();
   const snackbar = useSnackbarStore();
-  const chanelLinkSchema: Record<CHANEL_TYPE, string> = {
+  const chanelLinkSchema: Record<CHANNEL_TYPE, string> = {
     tiktok: 'tiktok://',
+    shopee: 'shopeevn://',
   };
   const {
     initConfig: formData,
@@ -40,7 +41,7 @@ const SettingScreen = (props: Props) => {
 
   const {subAccounts} = useFetchSubAccount({
     token: formData.platformAccount,
-    chanel: formData.chanel,
+    channel: formData.channel,
     platform: formData.platform,
   });
 
@@ -91,7 +92,7 @@ const SettingScreen = (props: Props) => {
       saveConfig(formData);
       sendDataToAccess(formData);
       OverlayModule.startOverlay();
-      openOtherApp(chanelLinkSchema?.[formData.chanel]);
+      openOtherApp(chanelLinkSchema?.[formData.channel]);
     }
   };
   return (
@@ -222,17 +223,21 @@ const SettingScreen = (props: Props) => {
             itemContainerStyle={{
               borderRadius: 4,
             }}
-            value={formData.chanel}
+            value={formData.channel}
             data={[
               {
                 value: 'tiktok',
                 label: 'Tiktok',
               },
+              {
+                value: 'shopee',
+                label: 'Shopee',
+              },
             ]}
             labelField={'label'}
             valueField="value"
             onChange={data => {
-              handleChangeFormData('chanel', data.value);
+              handleChangeFormData('channel', data.value);
             }}></Dropdown>
         </View>
         <View>

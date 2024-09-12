@@ -4,8 +4,9 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Url
 
-data class TiktokJob(
+data class Job(
         val id: Int,
         val link: String,
         val object_id: String,
@@ -46,25 +47,28 @@ data class SkipJobPayload(
         val type: String,
 )
 
-data class TiktokJobResponse(val data: TiktokJob)
+data class JobResponse(val data: Job)
 
 interface GolikeRequest {
-        @GET("advertising/publishers/tiktok/jobs")
+        @GET
         fun getJobs(
+                @Url url: String,
                 @Query("data") data: String?,
                 @Query("account_id") accountId: String?,
                 @Header("Authorization") authHeader: String?,
-        ): Call<TiktokJobResponse>
+        ): Call<JobResponse>
 
-        @POST("advertising/publishers/tiktok/complete-jobs")
+        @POST
         fun completeJob(
+                @Url url: String,
                 @Body requestBody: CompleteJobPayload,
                 @Header("Authorization") authHeader: String?,
                 @Header("t") t: String? = "VFZSamVVNUVZekpPVkVGNlRuYzlQUT09",
         ): Call<Any>
 
-        @POST("advertising/publishers/tiktok/skip-jobs")
+        @POST
         fun skipJob(
+                @Url url: String,
                 @Body requestBody: SkipJobPayload,
                 @Header("Authorization") authHeader: String?,
         ): Call<Any>

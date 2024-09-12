@@ -1,6 +1,6 @@
 import {golikeApi} from '../api/golike';
 import {Platform} from './platform.abstract';
-import {CHANEL_TYPE} from './type';
+import {CHANNEL_TYPE} from './type';
 
 export class Golike extends Platform {
   constructor(token: string) {
@@ -10,7 +10,7 @@ export class Golike extends Platform {
     const res = golikeApi.getProfile(this.token);
     return res;
   }
-  getSubAccounts(chanel: CHANEL_TYPE) {
-    return golikeApi.getSubAccounts({token: this.token, chanel});
+  getSubAccounts(channel: CHANNEL_TYPE) {
+    return golikeApi.getSubAccounts({token: this.token, channel});
   }
 }

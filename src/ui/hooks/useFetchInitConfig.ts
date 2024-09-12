@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
+import {CHANNEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useIsFocused} from '@react-navigation/native';
 import {useFetchAccount} from './useFetchAccounts';
@@ -7,7 +7,7 @@ export const CONFIG_KEY = 'config_key_V1';
 export type CONFIG_TYPE = {
   platform: PLATFORM_TYPE;
   platformAccount: string;
-  chanel: CHANEL_TYPE;
+  channel: CHANNEL_TYPE;
   workAccount: string;
   stopAfterSuccess: number;
   stopAfterError: number;
@@ -16,7 +16,7 @@ export type CONFIG_TYPE = {
 const initData: CONFIG_TYPE = {
   platform: PLATFORM_TYPE.GOLIKE,
   platformAccount: '',
-  chanel: CHANEL_TYPE.TIKTOK,
+  channel: CHANNEL_TYPE.TIKTOK,
   workAccount: '',
   stopAfterSuccess: 9999,
   stopAfterError: 9999,

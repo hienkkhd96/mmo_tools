@@ -1,7 +1,7 @@
+import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
 val okHttpClient =
         OkHttpClient.Builder()
@@ -20,7 +20,7 @@ val okHttpClient =
 
 val retrofit =
         Retrofit.Builder()
-                .baseUrl("https://gateway.golike.net/api/")
+                .baseUrl("https://gateway.golike.net/")
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()

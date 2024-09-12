@@ -1,34 +1,39 @@
 import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
 import {PlatformFactory} from '../../platform/platform.factory';
-import {CHANEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
+import {CHANNEL_TYPE, PLATFORM_TYPE} from '../../platform/type';
 export type GetSubAccountsParams = {
-  chanel: CHANEL_TYPE;
+  channel: CHANNEL_TYPE;
   token: string;
   platform: PLATFORM_TYPE;
 };
 export type SubAccount = {
-  nickname: string;
+  nickname?: string;
+  shopee_username?: string;
   user_id: string;
   avatar_thumb: string;
   unique_id: string;
   id: string;
 };
 export const useFetchSubAccount = (params: GetSubAccountsParams) => {
-  const {chanel, token, platform} = params;
+  const {channel, token, platform} = params;
   const [data, setData] = useState<SubAccount[]>([]);
   const isFocused = useIsFocused();
+  const keyNicknameByApp: Record<CHANNEL_TYPE, keyof SubAccount> = {
+    tiktok: 'nickname',
+    shopee: 'shopee_username',
+  };
 
   useEffect(() => {
     if (!isFocused) return;
     (async () => {
       try {
         const Platform = PlatformFactory.createPlatform(token, platform);
-        if (!chanel) {
+        if (!channel) {
           setData([]);
           return;
         }
-        const res = await Platform.getSubAccounts(chanel);
+        const res = await Platform.getSubAccounts(channel);
         const data = res.data;
         if (res.status === 200 && data?.data) {
           setData(data.data);
@@ -39,8 +44,11 @@ export const useFetchSubAccount = (params: GetSubAccountsParams) => {
         setData([]);
       }
     })();
-  }, [chanel, token, platform, isFocused]);
+  }, [channel, token, platform, isFocused]);
   return {
-    subAccounts: data,
+    subAccounts: data.map(item => ({
+      ...item,
+      nickname: item?.[keyNicknameByApp?.[channel]],
+    })),
   };
 };

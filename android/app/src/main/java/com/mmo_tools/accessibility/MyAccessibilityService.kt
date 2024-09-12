@@ -1,8 +1,8 @@
 package com.mmo_tools.accessibility
 
 import CompleteJobPayload
+import JobResponse
 import SkipJobPayload
-import TiktokJobResponse
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.BroadcastReceiver
@@ -16,10 +16,10 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -29,16 +29,14 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.TextView
 import com.google.gson.Gson
 import com.mmo_tools.R
+import com.mmo_tools.interfaces.applicationWork.ApplicationWorkFactory
+import com.mmo_tools.interfaces.platforms.PlatformFactory
+import com.mmo_tools.interfaces.platforms.PlatformService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.delay
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.util.DisplayMetrics
-import com.mmo_tools.interfaces.platforms.PlatformFactory
-import com.mmo_tools.interfaces.platforms.PlatformService
-
-
 
 data class FormField(
         val platform: String,
@@ -188,7 +186,8 @@ class MyAccessibilityService : AccessibilityService() {
         val stopAfterError = dataCollector.stopAfterError
         val stopAfterSuccess = dataCollector.stopAfterSuccess
         val platform = dataCollector.platform
-        platformService = PlatformFactory.create(platform)
+        val application = dataCollector.channel
+        platformService = PlatformFactory.create(platform, application)
         if (successJob >= stopAfterSuccess || failedJob >= stopAfterError) {
             showCustomToast("Đã hoàn tất lịch trình", autoClose = false)
             isStoped = true
@@ -202,26 +201,27 @@ class MyAccessibilityService : AccessibilityService() {
                 )
 
         call.enqueue(
-                object : Callback<TiktokJobResponse> {
+                object : Callback<JobResponse> {
                     override fun onResponse(
-                            call: Call<TiktokJobResponse>,
-                            response: Response<TiktokJobResponse>
+                            call: Call<JobResponse>,
+                            response: Response<JobResponse>
                     ) {
                         if (response.isSuccessful) {
                             val job = response.body()
+                            println(job)
                             val type = job?.data?.type
                             val objectId = job?.data?.object_id
                             val job_id = job?.data?.id
-
                             if (type == null || objectId == null || job_id == null) {
                                 return
                             }
+                            val applicationWork = ApplicationWorkFactory.create(application)
 
                             if (type == "like") {
                                 showCustomToast("Đang thực hiện job like", autoClose = false)
-                                openSchemaUrl(url = "tiktok://aweme/detail/$objectId")
+                                openSchemaUrl(url = applicationWork.getUrlToAction(type, objectId))
                                 jobScope.launch {
-                                    delay(3000)
+                                    delay(6000)
                                     if (!isStoped) {
                                         clickDoubleCenterScreen(this@MyAccessibilityService)
                                         completeJob(
@@ -252,11 +252,12 @@ class MyAccessibilityService : AccessibilityService() {
                                 }
                             } else if (type == "follow") {
                                 showCustomToast("Đang thực hiện job follow", autoClose = false)
-                                openSchemaUrl(url = "tiktok://profile?id=$objectId")
+                                println(applicationWork.getUrlToAction(type, objectId))
+                                openSchemaUrl(url = applicationWork.getUrlToAction(type, objectId))
                                 jobScope.launch {
-                                    delay(3000)
+                                    delay(6000)
                                     if (!isStoped) {
-                                        performClickOnTarget("Follow", type = "byText")
+                                        performClickOnTarget("Theo dõi", type = "byText")
                                         completeJob(
                                                 account_id,
                                                 job_id.toString(),
@@ -304,11 +305,14 @@ class MyAccessibilityService : AccessibilityService() {
                                 )
                             }
                         } else {
+                            showCustomToast("Lấy job thất bại", false)
+                            println(call.request().url)
                             println("Request failed with status: ${response.code()}")
                         }
                     }
 
-                    override fun onFailure(call: Call<TiktokJobResponse>, t: Throwable) {
+                    override fun onFailure(call: Call<JobResponse>, t: Throwable) {
+                        showCustomToast("Lấy job thất bại", false)
                         println("Error: ${t.message}")
                     }
                 }
@@ -316,7 +320,7 @@ class MyAccessibilityService : AccessibilityService() {
     }
     private fun performClickOnTarget(buttonText: String, type: String) {
         if (isStoped) return
-        
+
         val rootNode: AccessibilityNodeInfo? = rootInActiveWindow
         rootNode?.let {
             var nodes: List<AccessibilityNodeInfo>?
@@ -498,7 +502,7 @@ class MyAccessibilityService : AccessibilityService() {
 
         val dataCollector = appData
         val call =
-            platformService.skipJob(
+                platformService.skipJob(
                         SkipJobPayload(
                                 ads_id = job_id,
                                 account_id = account_id,
@@ -559,7 +563,6 @@ class MyAccessibilityService : AccessibilityService() {
         return position / cellSize
     }
 
-   
     fun clickDoubleCenterScreen(context: Context) {
         val (centerX, centerY) = getScreenCenter(context)
         jobScope.launch {
@@ -567,22 +570,21 @@ class MyAccessibilityService : AccessibilityService() {
             delay(200)
             autoClick(centerX, centerY)
         }
-        
     }
     fun getScreenCenter(context: Context): Pair<Int, Int> {
         // Get the WindowManager service
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    
+
         // Create a DisplayMetrics object to hold the screen metrics
         val displayMetrics = DisplayMetrics()
-    
+
         // Get the display metrics from the default display
         windowManager.defaultDisplay.getMetrics(displayMetrics)
-    
+
         // Calculate the center position
         val centerX = displayMetrics.widthPixels / 2
         val centerY = displayMetrics.heightPixels / 2
-    
+
         return Pair(centerX, centerY)
     }
 }

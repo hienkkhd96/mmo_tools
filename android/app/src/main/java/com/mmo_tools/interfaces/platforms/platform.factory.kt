@@ -1,9 +1,9 @@
 package com.mmo_tools.interfaces.platforms
 
 object PlatformFactory {
-    fun create(platform: String): PlatformService {
+    fun create(platform: String, application: String): PlatformService {
         return when (platform) {
-            "golike" -> GolikeService()
+            "golike" -> GolikeService(application)
             // Thêm các platform khác ở đây
             else -> throw IllegalArgumentException("Unknown platform: $platform")
         }

@@ -1,4 +1,4 @@
-import {CHANEL_TYPE} from '../platform/type';
+import {CHANNEL_TYPE} from '../platform/type';
 import golikeClient from './golikeClient';
 
 export const golikeApi = {
@@ -10,8 +10,14 @@ export const golikeApi = {
       },
     });
   },
-  getSubAccounts: ({token, chanel}: {token: string; chanel: CHANEL_TYPE}) => {
-    return golikeClient.get(`${chanel}-account`, {
+  getSubAccounts: ({
+    token,
+    channel,
+  }: {
+    token: string;
+    channel: CHANNEL_TYPE;
+  }) => {
+    return golikeClient.get(`${channel}-account`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json;charset=utf-8',
