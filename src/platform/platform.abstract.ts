@@ -8,4 +8,6 @@ export abstract class Platform {
   }
   abstract getMe(): Promise<AxiosResponse<any>>;
   abstract getSubAccounts(channel: CHANNEL_TYPE): Promise<AxiosResponse<any>>;
+
+  abstract getFieldsOptions(): Record<string, string>;
 }

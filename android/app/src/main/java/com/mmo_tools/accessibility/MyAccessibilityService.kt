@@ -193,37 +193,36 @@ class MyAccessibilityService : AccessibilityService() {
             isStoped = true
             return
         }
-
         val call =
                 platformService.getJobs(
                         accountId = account_id,
-                        authHeader = "Bearer ${dataCollector.platformAccount}"
+                        authHeader = platformService.getAuthHeader(dataCollector.platformAccount)
                 )
 
         call.enqueue(
-                object : Callback<JobResponse> {
-                    override fun onResponse(
-                            call: Call<JobResponse>,
-                            response: Response<JobResponse>
-                    ) {
+                object : Callback<Any> {
+                    override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {
-                            val job = response.body()
-                            println(job)
-                            val type = job?.data?.type
-                            val objectId = job?.data?.object_id
-                            val job_id = job?.data?.id
-                            if (type == null || objectId == null || job_id == null) {
-                                return
-                            }
-                            val applicationWork = ApplicationWorkFactory.create(application)
+                            val job =
+                                    platformService.transformBodyGetJobs(response.body() as Any) as
+                                            JobResponse
 
+                            val type = job.data.type
+                            val objectId = job.data.object_id
+                            val job_id = job.data.id
+                            val applicationWork = ApplicationWorkFactory.create(application)
                             if (type == "like") {
                                 showCustomToast("Đang thực hiện job like", autoClose = false)
                                 openSchemaUrl(url = applicationWork.getUrlToAction(type, objectId))
+                                val typeOfButton = applicationWork.getButtonToClick(type)
                                 jobScope.launch {
                                     delay(6000)
                                     if (!isStoped) {
-                                        clickDoubleCenterScreen(this@MyAccessibilityService)
+                                        if (typeOfButton == "CLICK_DOUBLE_SCREEN") {
+                                            clickDoubleCenterScreen(this@MyAccessibilityService)
+                                        } else {
+                                            performClickOnTarget(typeOfButton, type = "byId")
+                                        }
                                         completeJob(
                                                 account_id,
                                                 job_id.toString(),
@@ -252,12 +251,12 @@ class MyAccessibilityService : AccessibilityService() {
                                 }
                             } else if (type == "follow") {
                                 showCustomToast("Đang thực hiện job follow", autoClose = false)
-                                println(applicationWork.getUrlToAction(type, objectId))
-                                openSchemaUrl(url = applicationWork.getUrlToAction(type, objectId))
+                                openSchemaUrl(applicationWork.getUrlToAction(type, objectId))
+                                val typeOfButton = applicationWork.getButtonToClick(type)
                                 jobScope.launch {
-                                    delay(6000)
+                                    delay(5000)
                                     if (!isStoped) {
-                                        performClickOnTarget("Theo dõi", type = "byText")
+                                        performClickOnTarget(typeOfButton, type = "byText")
                                         completeJob(
                                                 account_id,
                                                 job_id.toString(),
@@ -268,7 +267,7 @@ class MyAccessibilityService : AccessibilityService() {
                                                     override fun onSuccess() {
                                                         if (!isStoped) {
                                                             jobScope.launch {
-                                                                delay(8000)
+                                                                delay(5000)
                                                                 handleAutoCollect()
                                                             }
                                                         }
@@ -311,8 +310,9 @@ class MyAccessibilityService : AccessibilityService() {
                         }
                     }
 
-                    override fun onFailure(call: Call<JobResponse>, t: Throwable) {
+                    override fun onFailure(call: Call<Any>, t: Throwable) {
                         showCustomToast("Lấy job thất bại", false)
+                        println(call.request().url)
                         println("Error: ${t.message}")
                     }
                 }

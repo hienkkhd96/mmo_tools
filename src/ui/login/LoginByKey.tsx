@@ -52,7 +52,6 @@ const LoginByKey = ({navigation}: Props) => {
         return;
       } else {
         console.log(res);
-
         snackBar.setMessage(res.data.message || 'Đăng nhập thất bại', 'error');
         throw new Error('Kích hoạt thất bại');
       }

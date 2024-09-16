@@ -18,11 +18,26 @@ val okHttpClient =
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .build()
 
-val retrofit =
-        Retrofit.Builder()
-                .baseUrl("https://gateway.golike.net/")
-                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+class RetrofitPlatform {
+        fun build(platform: String): Retrofit {
+                when (platform) {
+                        "golike" ->
+                                return Retrofit.Builder()
+                                        .baseUrl("https://gateway.golike.net/")
+                                        .client(okHttpClient)
+                                        .addConverterFactory(GsonConverterFactory.create())
+                                        .build()
+                        "tdsub" ->
+                                return Retrofit.Builder()
+                                        .baseUrl("https://traodoisub.com/")
+                                        .client(okHttpClient)
+                                        .addConverterFactory(GsonConverterFactory.create())
+                                        .build()
+                        else -> throw IllegalArgumentException("Unknown platform: $platform")
+                }
+        }
+}
 
-val golikeService: GolikeRequest = retrofit.create(GolikeRequest::class.java)
+val golikeService: GolikeRequest =
+        RetrofitPlatform().build("golike").create(GolikeRequest::class.java)
+val tdsubService: TDSubRequest = RetrofitPlatform().build("tdsub").create(TDSubRequest::class.java)

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   KeyboardAvoidingView,
   Linking,
@@ -22,6 +22,7 @@ import {CONFIG_TYPE, useFetchInitConfig, useFetchSubAccount} from '../hooks';
 import {tokenApi} from '../../api/token';
 import {useAppStore} from '../../store/app.store';
 import {useSnackbarStore} from '../../store/snackbar.store';
+import {channelEnabledByPlatform} from '../../constant/platform';
 
 type Props = {};
 
@@ -31,6 +32,9 @@ const SettingScreen = (props: Props) => {
   const chanelLinkSchema: Record<CHANNEL_TYPE, string> = {
     tiktok: 'tiktok://',
     shopee: 'shopeevn://',
+    youtube: 'youtube://',
+    facebook: 'fb://',
+    instagram: 'instagram://',
   };
   const {
     initConfig: formData,
@@ -61,7 +65,7 @@ const SettingScreen = (props: Props) => {
       return res.data.isExpired === true;
     } catch (error) {
       console.log(error);
-      snackbar.setMessage('Token đã hết hạng', 'error');
+      snackbar.setMessage('Token đã hết hạn', 'error');
       return true;
     }
   };
@@ -95,6 +99,13 @@ const SettingScreen = (props: Props) => {
       openOtherApp(chanelLinkSchema?.[formData.channel]);
     }
   };
+  const channelEnabled = useMemo(() => {
+    const channelList = channelEnabledByPlatform[formData.platform];
+    return channelList.map(channel => ({
+      value: channel,
+      label: channel.charAt(0).toUpperCase() + channel.slice(1),
+    }));
+  }, [formData.platform]);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -224,56 +235,50 @@ const SettingScreen = (props: Props) => {
               borderRadius: 4,
             }}
             value={formData.channel}
-            data={[
-              {
-                value: 'tiktok',
-                label: 'Tiktok',
-              },
-              {
-                value: 'shopee',
-                label: 'Shopee',
-              },
-            ]}
+            data={channelEnabled}
             labelField={'label'}
             valueField="value"
             onChange={data => {
               handleChangeFormData('channel', data.value);
             }}></Dropdown>
         </View>
-        <View>
-          <Typo
-            styles={{
-              marginTop: 20,
-              fontSize: 18,
-              fontWeight: 'bold',
-              color: COLOR.primary,
-            }}>
-            Chọn tài khoản làm việc
-          </Typo>
-          <Dropdown
-            style={{
-              marginTop: 2,
-              backgroundColor: '#F1F4FF',
-              borderRadius: 10,
-              paddingHorizontal: 10,
-              paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: COLOR.primary,
-            }}
-            itemContainerStyle={{
-              borderRadius: 4,
-            }}
-            value={formData.workAccount}
-            data={subAccounts.map(subAccount => ({
-              label: subAccount.nickname,
-              value: subAccount.id,
-            }))}
-            labelField={'label'}
-            valueField="value"
-            onChange={data => {
-              handleChangeFormData('workAccount', data.value);
-            }}></Dropdown>
-        </View>
+        {formData.platform === PLATFORM_TYPE.GOLIKE && (
+          <View>
+            <Typo
+              styles={{
+                marginTop: 20,
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: COLOR.primary,
+              }}>
+              Chọn tài khoản làm việc
+            </Typo>
+            <Dropdown
+              style={{
+                marginTop: 2,
+                backgroundColor: '#F1F4FF',
+                borderRadius: 10,
+                paddingHorizontal: 10,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: COLOR.primary,
+              }}
+              itemContainerStyle={{
+                borderRadius: 4,
+              }}
+              value={formData.workAccount}
+              data={subAccounts.map(subAccount => ({
+                label: subAccount.nickname,
+                value: subAccount.id,
+              }))}
+              labelField={'label'}
+              valueField="value"
+              onChange={data => {
+                handleChangeFormData('workAccount', data.value);
+              }}></Dropdown>
+          </View>
+        )}
+
         <View
           style={{
             marginTop: 20,

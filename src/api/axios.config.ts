@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: 'http://192.168.1.24:8000/v1/',
+  baseURL: 'https://api.mmotools.online/v1/',
   headers: {
     'Content-Type': 'application/json',
   },

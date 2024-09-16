@@ -4,6 +4,13 @@ interface ApplicationWorkInterface {
     fun like() {}
     fun follow() {}
     fun getUrlToAction(type: String, objectId: String): String
+    fun getButtonToClick(type: String): String {
+        return when (type) {
+            "like" -> "like"
+            "follow" -> "follow"
+            else -> "unknown"
+        }
+    }
     fun getName(): String {
         return ""
     }
@@ -12,6 +19,13 @@ interface ApplicationWorkInterface {
 class TiktokService : ApplicationWorkInterface {
     override fun getName(): String {
         return "tiktok"
+    }
+    override fun getButtonToClick(type: String): String {
+        return when (type) {
+            "like" -> "CLICK_DOUBLE_SCREEN"
+            "follow" -> "Follow"
+            else -> "unknown"
+        }
     }
     override fun getUrlToAction(type: String, objectId: String): String {
         return when (type) {
@@ -25,6 +39,13 @@ class TiktokService : ApplicationWorkInterface {
 class ShopeeService : ApplicationWorkInterface {
     override fun getName(): String {
         return "shopee"
+    }
+    override fun getButtonToClick(type: String): String {
+        return when (type) {
+            "like" -> "CLICK_DOUBLE_SCREEN"
+            "follow" -> "Follow"
+            else -> "unknown"
+        }
     }
     override fun getUrlToAction(type: String, objectId: String): String {
         return when (type) {

@@ -22,10 +22,17 @@ export const useFetchSubAccount = (params: GetSubAccountsParams) => {
   const keyNicknameByApp: Record<CHANNEL_TYPE, keyof SubAccount> = {
     tiktok: 'nickname',
     shopee: 'shopee_username',
+    youtube: 'nickname',
+    facebook: 'nickname',
+    instagram: 'nickname',
   };
 
   useEffect(() => {
     if (!isFocused) return;
+    if (platform !== PLATFORM_TYPE.GOLIKE) {
+      setData([]);
+      return;
+    }
     (async () => {
       try {
         const Platform = PlatformFactory.createPlatform(token, platform);

@@ -15,6 +15,7 @@ import {COLOR} from '../../../constant';
 import {PlatformFactory} from '../../../platform/platform.factory';
 import {useSnackbarStore} from '../../../store/snackbar.store';
 import {Account} from '../../hooks';
+import InputBase from '../../../components/input';
 
 type Props = {
   navigation: any;
@@ -29,14 +30,34 @@ const AccountList = ({navigation, route}: Props) => {
   }
   const snackbar = useSnackbarStore();
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const {
+    control,
+    formState: {errors},
+    handleSubmit,
+    reset,
+    watch,
+  } = useForm<FieldValues>({
+    defaultValues: {
+      token: '',
+    },
+  });
   const addAccounts = async () => {
     try {
-      const platform = PlatformFactory.createPlatform(token, platformKey);
+      const accessToken = watch('accessToken');
+      if (!accessToken) {
+        snackbar.setMessage('Vui lòng điền token', 'error');
+        return;
+      }
+      console.log(accessToken);
+
+      const platform = PlatformFactory.createPlatform(accessToken, platformKey);
       const res = await platform.getMe();
+
       if (res.data && res.status === 200) {
+        const fieldsOptions = platform.getFieldsOptions();
         const resAddAccount = await platformAccountApi.addAccount({
-          accountName: res.data?.data?.username,
-          token: token,
+          accountName: res.data?.data?.[fieldsOptions.username],
+          token: accessToken,
           type: platformKey,
         });
 
@@ -97,6 +118,13 @@ const AccountList = ({navigation, route}: Props) => {
         return;
     }
   };
+  const handleAddAccount = () => {
+    if (platformKey === 'golike') {
+      navigation.navigate('login-golike');
+    } else {
+      addAccounts();
+    }
+  };
   useEffect(() => {
     fetchAccounts();
     if (token) {
@@ -136,8 +164,18 @@ const AccountList = ({navigation, route}: Props) => {
           marginBottom: 10,
           padding: 16,
         }}>
+        {platformKey !== 'golike' && (
+          <InputBase
+            control={control}
+            errors={errors}
+            label="Token"
+            placeholder="Điền token"
+            name="accessToken"
+            value={watch('accessToken')}
+          />
+        )}
         <Button
-          onPress={() => navigation.navigate('login-golike')}
+          onPress={handleAddAccount}
           mode="contained"
           labelStyle={{
             fontSize: 20,

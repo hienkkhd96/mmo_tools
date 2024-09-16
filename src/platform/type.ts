@@ -5,5 +5,8 @@ export enum PLATFORM_TYPE {
 }
 export enum CHANNEL_TYPE {
   TIKTOK = 'tiktok',
+  YOUTUBE = 'youtube',
+  FACEBOOK = 'facebook',
+  INSTAGRAM = 'instagram',
   SHOPEE = 'shopee',
 }
