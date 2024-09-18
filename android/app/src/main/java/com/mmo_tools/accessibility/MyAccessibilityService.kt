@@ -45,7 +45,8 @@ data class FormField(
         val workAccount: String,
         val stopAfterSuccess: Int,
         val stopAfterError: Int,
-        val timeDelay: Long
+        val timeDelay: Long,
+        val accessToken: String
 )
 
 interface JobCallback {
@@ -180,7 +181,7 @@ class MyAccessibilityService : AccessibilityService() {
         if (appData == null || isStoped) {
             return
         }
-
+        showCustomToast("Đã chờ để lấy job tiếp theo", autoClose = false)
         val dataCollector = appData
         val account_id = dataCollector?.workAccount ?: return
         val stopAfterError = dataCollector.stopAfterError
@@ -196,21 +197,26 @@ class MyAccessibilityService : AccessibilityService() {
         val call =
                 platformService.getJobs(
                         accountId = account_id,
-                        authHeader = platformService.getAuthHeader(dataCollector.platformAccount)
+                        authHeader = dataCollector.platformAccount
                 )
 
         call.enqueue(
-                object : Callback<Any> {
-                    override fun onResponse(call: Call<Any>, response: Response<Any>) {
+                object : Callback<JobResponse> {
+                    override fun onResponse(
+                            call: Call<JobResponse>,
+                            response: Response<JobResponse>
+                    ) {
                         if (response.isSuccessful) {
-                            val job =
-                                    platformService.transformBodyGetJobs(response.body() as Any) as
-                                            JobResponse
-
-                            val type = job.data.type
-                            val objectId = job.data.object_id
-                            val job_id = job.data.id
+                            val job = response.body()
+                            println("Job: $job")
+                            val type = job?.data?.type
+                            val objectId = job?.data?.object_id
+                            val job_id = job?.data?.id
                             val applicationWork = ApplicationWorkFactory.create(application)
+                            if (type == null || objectId == null || job_id == null) {
+                                showCustomToast("Lấy job thất bại", false)
+                                return
+                            }
                             if (type == "like") {
                                 showCustomToast("Đang thực hiện job like", autoClose = false)
                                 openSchemaUrl(url = applicationWork.getUrlToAction(type, objectId))
@@ -225,7 +231,7 @@ class MyAccessibilityService : AccessibilityService() {
                                         }
                                         completeJob(
                                                 account_id,
-                                                job_id.toString(),
+                                                job_id,
                                                 objectId,
                                                 type,
                                                 1,
@@ -259,7 +265,7 @@ class MyAccessibilityService : AccessibilityService() {
                                         performClickOnTarget(typeOfButton, type = "byText")
                                         completeJob(
                                                 account_id,
-                                                job_id.toString(),
+                                                job_id,
                                                 objectId,
                                                 type,
                                                 1,
@@ -310,7 +316,7 @@ class MyAccessibilityService : AccessibilityService() {
                         }
                     }
 
-                    override fun onFailure(call: Call<Any>, t: Throwable) {
+                    override fun onFailure(call: Call<JobResponse>, t: Throwable) {
                         showCustomToast("Lấy job thất bại", false)
                         println(call.request().url)
                         println("Error: ${t.message}")
@@ -429,16 +435,15 @@ class MyAccessibilityService : AccessibilityService() {
         }
 
         val dataCollector = appData
-        println("job_id: $job_id account_id:")
         val call =
                 platformService.completeJob(
                         CompleteJobPayload(
-                                ads_id = job_id.toInt(),
-                                account_id = account_id.toInt(),
+                                ads_id = job_id,
+                                account_id = account_id,
                                 async = true,
                                 data = null
                         ),
-                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                        authHeader = "${dataCollector?.platformAccount}"
                 )
 
         call.enqueue(
@@ -512,7 +517,7 @@ class MyAccessibilityService : AccessibilityService() {
                         authHeader = "Bearer ${dataCollector?.platformAccount}"
                 )
 
-        call.enqueue(
+        call?.enqueue(
                 object : Callback<Any> {
                     override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {

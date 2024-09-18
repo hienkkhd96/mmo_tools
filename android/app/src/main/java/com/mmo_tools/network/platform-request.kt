@@ -13,7 +13,7 @@ interface GolikeRequest {
                 @Query("data") data: String?,
                 @Query("account_id") accountId: String?,
                 @Header("Authorization") authHeader: String?,
-        ): Call<Any>
+        ): Call<JobResponse>
 
         @POST
         fun completeJob(
@@ -32,9 +32,20 @@ interface GolikeRequest {
 }
 
 interface TDSubRequest {
-        @GET("api/")
+        @GET("platform-jobs/first-job")
         fun getJobs(
-                @Query("fields") type: String?,
-                @Query("access_token") authHeader: String?,
+                @Query("applicationName") applicationName: String?,
+                @Query("type") type: String?,
+                @Query("platform") platform: String?,
+                @Query("authToken") authHeader: String?,
+        ): Call<JobResponse>
+
+        @POST("platform-jobs/complete-job")
+        fun completeJob(
+                @Query("applicationName") applicationName: String?,
+                @Query("platform") platform: String?,
+                @Body requestBody: CompleteJobPayload,
+                @Query("authToken") authHeader: String?,
+                @Header("Content-Type") contentType: String? = "application/json",
         ): Call<Any>
 }

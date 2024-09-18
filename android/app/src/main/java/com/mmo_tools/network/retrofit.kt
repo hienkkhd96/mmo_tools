@@ -14,8 +14,8 @@ val okHttpClient =
                                         .build()
                         chain.proceed(newRequest)
                 }
-                .readTimeout(10, TimeUnit.SECONDS)
-                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS)
                 .build()
 
 class RetrofitPlatform {
@@ -29,7 +29,7 @@ class RetrofitPlatform {
                                         .build()
                         "tdsub" ->
                                 return Retrofit.Builder()
-                                        .baseUrl("https://traodoisub.com/")
+                                        .baseUrl("http://10.0.2.2:8000/v1/")
                                         .client(okHttpClient)
                                         .addConverterFactory(GsonConverterFactory.create())
                                         .build()

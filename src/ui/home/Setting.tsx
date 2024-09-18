@@ -28,6 +28,7 @@ type Props = {};
 
 const SettingScreen = (props: Props) => {
   const {token} = useAppStore();
+  const {accessToken} = useAppStore();
   const snackbar = useSnackbarStore();
   const chanelLinkSchema: Record<CHANNEL_TYPE, string> = {
     tiktok: 'tiktok://',
@@ -94,7 +95,7 @@ const SettingScreen = (props: Props) => {
       );
     } else {
       saveConfig(formData);
-      sendDataToAccess(formData);
+      sendDataToAccess({...formData, accessToken});
       OverlayModule.startOverlay();
       openOtherApp(chanelLinkSchema?.[formData.channel]);
     }
