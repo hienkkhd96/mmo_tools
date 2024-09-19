@@ -29,7 +29,7 @@ class RetrofitPlatform {
                                         .build()
                         "tdsub" ->
                                 return Retrofit.Builder()
-                                        .baseUrl("http://10.0.2.2:8000/v1/")
+                                        .baseUrl("https://api.mmotools.online/")
                                         .client(okHttpClient)
                                         .addConverterFactory(GsonConverterFactory.create())
                                         .build()

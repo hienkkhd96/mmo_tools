@@ -5,6 +5,7 @@ object PlatformFactory {
         return when (platform) {
             "golike" -> GolikeService(application)
             "tds" -> TDSubService(application)
+            "ttc" -> TTCheoService(application)
             // Thêm các platform khác ở đây
             else -> throw IllegalArgumentException("Unknown platform: $platform")
         }

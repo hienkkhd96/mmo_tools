@@ -7,7 +7,7 @@ interface ApplicationWorkInterface {
     fun getButtonToClick(type: String): String {
         return when (type) {
             "like" -> "like"
-            "follow" -> "follow"
+            "follow" -> "Follow"
             else -> "unknown"
         }
     }

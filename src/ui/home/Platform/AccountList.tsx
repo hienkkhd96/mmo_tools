@@ -48,12 +48,12 @@ const AccountList = ({navigation, route}: Props) => {
         snackbar.setMessage('Vui lòng điền token', 'error');
         return;
       }
-      console.log(accessToken);
-
       const platform = PlatformFactory.createPlatform(accessToken, platformKey);
-      const res = await platform.getMe();
 
-      if (res.data && res.status === 200) {
+      const res = await platform.getMe();
+      console.log('platform', res.data);
+
+      if (res.data && res.status === 200 && res.data?.status !== 'fail') {
         const fieldsOptions = platform.getFieldsOptions();
         const resAddAccount = await platformAccountApi.addAccount({
           accountName: res.data?.data?.[fieldsOptions.username],
@@ -76,7 +76,9 @@ const AccountList = ({navigation, route}: Props) => {
             'error',
           );
         }
+        return;
       }
+      throw res.data;
     } catch (error: any) {
       if (error?.response?.status === 401) {
         snackbar.setMessage('Token không hợp lệ!', 'error');
