@@ -43,7 +43,7 @@ const AccountList = ({navigation, route}: Props) => {
   });
   const addAccounts = async () => {
     try {
-      const accessToken = watch('accessToken');
+      const accessToken = watch('accessToken') || token;
       if (!accessToken) {
         snackbar.setMessage('Vui lòng điền token', 'error');
         return;
