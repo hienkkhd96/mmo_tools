@@ -514,10 +514,10 @@ class MyAccessibilityService : AccessibilityService() {
                                 object_id = object_id,
                                 type = type,
                         ),
-                        authHeader = "Bearer ${dataCollector?.platformAccount}"
+                        authHeader = "${dataCollector?.platformAccount}"
                 )
 
-        call?.enqueue(
+        call.enqueue(
                 object : Callback<Any> {
                     override fun onResponse(call: Call<Any>, response: Response<Any>) {
                         if (response.isSuccessful) {

@@ -11,9 +11,7 @@ interface PlatformService {
     fun getJobs(accountId: String, authHeader: String, type: String? = null): Call<JobResponse>
     fun getAuthHeader(authheader: String): String
     fun completeJob(payload: CompleteJobPayload, authHeader: String): Call<Any>
-    fun skipJob(payload: SkipJobPayload, authHeader: String): Call<Any>? {
-        return null
-    }
+    fun skipJob(payload: SkipJobPayload, authHeader: String): Call<Any>
 }
 
 class GolikeService : PlatformService {
