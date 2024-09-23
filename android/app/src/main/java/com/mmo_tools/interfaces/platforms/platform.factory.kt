@@ -6,6 +6,7 @@ object PlatformFactory {
             "golike" -> GolikeService(application)
             "tds" -> TDSubService(application)
             "ttc" -> TTCheoService(application)
+            "bumx" -> BumxService(application)
             // Thêm các platform khác ở đây
             else -> throw IllegalArgumentException("Unknown platform: $platform")
         }

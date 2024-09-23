@@ -177,7 +177,7 @@ class MyAccessibilityService : AccessibilityService() {
         // Xử lý khi dịch vụ bị ngắt
     }
 
-    private fun handleAutoCollect() {
+    private fun handleAutoCollect(count: Int = 0) {
         if (appData == null || isStoped) {
             return
         }
@@ -208,12 +208,18 @@ class MyAccessibilityService : AccessibilityService() {
                     ) {
                         if (response.isSuccessful) {
                             val job = response.body()
-                            println("Job: $job")
                             val type = job?.data?.type
                             val objectId = job?.data?.object_id
                             val job_id = job?.data?.id
                             val applicationWork = ApplicationWorkFactory.create(application)
                             if (type == null || objectId == null || job_id == null) {
+                                showCustomToast("Đang cố gắng lấy lại job", false)
+                                if (count < 5) {
+                                    jobScope.launch {
+                                        delay(2000)
+                                        handleAutoCollect(count + 1)
+                                    }
+                                }
                                 showCustomToast("Lấy job thất bại", false)
                                 return
                             }

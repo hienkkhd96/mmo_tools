@@ -29,11 +29,16 @@ class RetrofitPlatform {
                                         .build()
                         "tdsub" ->
                                 return Retrofit.Builder()
-                                        .baseUrl("https://api.mmotools.online/")
+                                        .baseUrl("http://192.168.1.4:8000/v1/")
                                         .client(okHttpClient)
                                         .addConverterFactory(GsonConverterFactory.create())
                                         .build()
-                        else -> throw IllegalArgumentException("Unknown platform: $platform")
+                        else ->
+                                return Retrofit.Builder()
+                                        .baseUrl("https://api.mmotools.online/v1/")
+                                        .client(okHttpClient)
+                                        .addConverterFactory(GsonConverterFactory.create())
+                                        .build()
                 }
         }
 }
